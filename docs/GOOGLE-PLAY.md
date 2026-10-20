@@ -215,6 +215,9 @@ After 14 days with 12+ opted-in testers:
 
 | Problem | Fix |
 | --- | --- |
+| `Unsupported class file major version 69` | Android Studio's bundled Java 25 is too new for Gradle 8.14. Build with Java 21: set `JAVA_HOME` to a JDK 21 folder (on this PC: `C:\Users\Rocky\.donext-build\jdk-21.0.12.1+1`). |
+| `PKIX path building failed` while downloading | Antivirus HTTPS scanning (for example Norton). Use a trust store that includes the antivirus certificate: set `JAVA_TOOL_OPTIONS=-Djavax.net.ssl.trustStore=C:/Users/Rocky/.donext-build/cacerts -Djavax.net.ssl.trustStorePassword=changeit` before running Gradle. |
+| `The filename, directory name, or volume label syntax is incorrect` | In `client/android/local.properties`, write the SDK path with forward slashes: `sdk.dir=C:/Users/Rocky/AppData/Local/Android/Sdk`. |
 | `SDK location not found` | Open Android Studio once (Part 1, step 1). If it still fails, create `client/android/local.properties` with `sdk.dir=C\:\\Users\\Rocky\\AppData\\Local\\Android\\Sdk`. |
 | `Keystore was tampered with, or password was incorrect` | Check `client/android/keystore.properties` against `README-PASSWORD.txt`. |
 | Reminders arrive a few minutes late | In the app: **Account → Reminders → Exact times → Allow**. |
