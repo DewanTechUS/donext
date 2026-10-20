@@ -11,6 +11,7 @@ const task = (overrides: Partial<Task>): Task => {
     description: '',
     dueDate: null,
     dueTime: null,
+    reminderMinutes: null,
     priority: 'medium',
     category: '',
     completed: false,

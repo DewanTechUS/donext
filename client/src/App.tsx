@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
-import { GuestOnly, RequireAuth } from './components/RequireAuth';
+import { GuestOnly, RequireAuth, ServerOnly } from './components/RequireAuth';
 import { PageLoader } from './components/Spinner';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TasksProvider } from './context/TasksContext';
@@ -38,9 +38,11 @@ export default function App() {
                     <Route
                       path="lists"
                       element={
-                        <RequireAuth>
-                          <ListsPage />
-                        </RequireAuth>
+                        <ServerOnly>
+                          <RequireAuth>
+                            <ListsPage />
+                          </RequireAuth>
+                        </ServerOnly>
                       }
                     />
                     <Route
@@ -75,7 +77,14 @@ export default function App() {
                         </GuestOnly>
                       }
                     />
-                    <Route path="reset-password" element={<ResetPasswordPage />} />
+                    <Route
+                      path="reset-password"
+                      element={
+                        <ServerOnly>
+                          <ResetPasswordPage />
+                        </ServerOnly>
+                      }
+                    />
                     <Route path="support" element={<SupportPage />} />
                     <Route path="privacy" element={<PrivacyPage />} />
                     <Route path="terms" element={<TermsPage />} />

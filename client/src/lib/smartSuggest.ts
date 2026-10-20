@@ -15,6 +15,10 @@ export interface Suggestion {
   dueDate?: string;
   dueTime?: string;
   subtasks?: string[];
+  /** Minutes before the due time ("remind me 1 hour before"); -1 = "no reminder". */
+  reminderMinutes?: number;
+  /** "with a note …" */
+  description?: string;
 }
 
 interface CategoryRule {
@@ -74,10 +78,12 @@ const TEMPLATES: Array<{ match: RegExp; subtasks: string[] }> = [
   { match: /^(buy |get )?groceries$/, subtasks: ['Milk', 'Eggs', 'Bread', 'Fruit', 'Vegetables'] },
 ];
 
-const HIGH = /\b(urgent|asap|important|critical|immediately|high priority)\b|!{2,}/;
-const LOW = /\b(someday|maybe|eventually|whenever|no rush|low priority)\b/;
+const HIGH = /\b(urgent|asap|important|critical|immediately|high priority|top priority|priority (?:is |level |as |of )?(?:high|urgent|top))\b|!{2,}/;
+const LOW = /\b(someday|maybe|eventually|whenever|no rush|low priority|priority (?:is |level |as |of )?low)\b/;
+const MEDIUM = /\b(medium priority|normal priority|priority (?:is |level |as |of )?(?:medium|normal))\b/;
 // Words that only express urgency and are dropped from the title.
-const PRIORITY_NOISE = /\b(urgent(ly)?|asap|high priority|low priority|medium priority|no rush|someday|eventually|whenever)\b|!+/g;
+const PRIORITY_NOISE =
+  /\b(?:with\s+)?(?:a\s+)?(?:priority (?:is |level |as |of )?(?:high|medium|normal|low|urgent|top)|(?:high|medium|normal|low|top) priority|urgent(?:ly)?|asap|no rush|someday|eventually|whenever)\b|!+/gi;
 
 const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const DAY_RX = /\b(?:on |this |next )?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/;
@@ -135,7 +141,7 @@ export function parseDue(text: string, now = new Date()): { date: string | null;
   return { date: w.dueDate, time: w.dueTime ?? null };
 }
 
-function parseWhen(text: string, now: Date): { text: string; dueDate?: string; dueTime?: string } {
+function parseWhen(text: string, now: Date): { text: string; dueDate?: string; dueTime?: string; inferredDate?: boolean } {
   let t = ` ${text} `;
   let dueDate: string | undefined;
   let dueTime: string | undefined;
@@ -158,6 +164,10 @@ function parseWhen(text: string, now: Date): { text: string; dueDate?: string; d
     const at = new Date(now.getTime() + Number(m[1]) * (/^h/i.test(m[2]) ? 3_600_000 : 60_000));
     dueTime = `${pad(at.getHours())}:${pad(at.getMinutes())}`;
     dueDate = todayISO(at);
+  } else if ((m = take(/\b(?:at|by) (\d{1,2})\b(?![:/.\d]|\s*(?:am|pm|a\.m|p\.m|days?|hours?|hrs?|mins?|minutes?|weeks?)\b)/i))) {
+    // "at 9" with no am/pm: 7–12 as said, 1–6 means afternoon or evening.
+    const h = Number(m[1]);
+    if (h >= 1 && h <= 12) dueTime = `${pad(h <= 6 ? h + 12 : h)}:00`;
   } else if (take(/\b(?:at )?noon\b/i)) dueTime = '12:00';
   else if (take(/\b(?:this |in the )?morning\b/i)) dueTime = '09:00';
   else if (take(/\b(?:this |in the )?afternoon\b/i)) dueTime = '14:00';
@@ -185,10 +195,12 @@ function parseWhen(text: string, now: Date): { text: string; dueDate?: string; d
   }
 
   // A time with no day: today if it's still ahead, otherwise tomorrow.
+  let inferredDate = false;
   if (dueTime && !dueDate) {
     dueDate = dueTime > `${pad(now.getHours())}:${pad(now.getMinutes())}` ? addDays(now, 0) : addDays(now, 1);
+    inferredDate = true;
   }
-  return { text: t, dueDate, dueTime };
+  return { text: t, dueDate, dueTime, inferredDate };
 }
 
 function categorize(lower: string, existing: string[]): string | undefined {
@@ -236,38 +248,190 @@ function groceryItems(text: string): string[] | undefined {
   return [...new Set(items)].map(capitalize);
 }
 
+// ---- Spoken commands ("Hey DoNext, I have a job tomorrow at 9, priority high, remind me 1 hour before") ----
+
+/** "Hey DoNext," / "OK DoNext" at the start. */
+const WAKE_WORD = /^\s*(?:(?:hey|hi|hello|ok|okay)[\s,]+)?do\s?next\b[\s,.:;!-]*/i;
+
+/** "…, add it" / "save it" / "that's it" at the end: save the task right away. */
+export const SUBMIT_PHRASE = /[\s,.;:!-]*\b(?:and\s+)?(?:add it|save it|save (?:the |this )?task|add (?:the |this )?task|that'?s it|that'?s all|done adding)[\s.!]*$/i;
+
+/** Words people say before the actual task. */
+const LEADING_FILLERS = [
+  /^(?:please|can you|could you|would you|i want you to)\s+/i,
+  /^(?:add|create|make|put|set up|start)\s+(?:a\s+)?(?:new\s+)?(?:task|to-?do|reminder)\s*(?:to|for|called|named|:)?\s*/i,
+  /^new\s+(?:task|to-?do)\s*:?\s*/i,
+  /^add\s+/i,
+  /^(?:remind me to|remember to|don'?t (?:let me )?forget to)\s+/i,
+  /^i(?:'ve| have)? got\s+(?:to\s+|a\s+|an\s+)?/i,
+  /^i\s+(?:have|need|must|should|want)\s+(?:to\s+|a\s+|an\s+|the\s+|my\s+)?/i,
+  /^there(?:'s| is)\s+(?:a\s+|an\s+)/i,
+];
+
+const NUMBER_WORDS: Record<string, number> = {
+  a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  fifteen: 15, twenty: 20, thirty: 30, 'forty five': 45, 'forty-five': 45,
+};
+
+const REMINDER_VERB = String.raw`(?:(?:set\s+)?(?:a\s+)?reminder|remind me|alert me|notify me)`;
+const REMIND_NONE = /[\s,;]*(?:and\s+)?(?:with\s+)?no\s+reminders?\b/i;
+const REMIND_BEFORE = new RegExp(
+  String.raw`[\s,;]*(?:and\s+)?${REMINDER_VERB}\s+(half an hour|(\d+|an?|one|two|three|four|five|six|seven|eight|nine|ten|fifteen|twenty|thirty|forty[- ]five)\s*(minutes?|mins?|hours?|hrs?|days?|weeks?))\s+(?:before|earlier|ahead|prior)\b(?:\s+(?:it|that|the (?:due date|deadline|task|time)))?`,
+  'i',
+);
+const REMIND_AT = new RegExp(
+  String.raw`[\s,;]*(?:and\s+)?${REMINDER_VERB}\s+((?:(?:on|at|for|tomorrow|today|tonight|this|next|(?:sun|mon|tues|wednes|thurs|fri|satur)day|morning|evening|afternoon|noon)\b[\s,]*|\d{1,2}(?::\d{2})?\s*(?:am|pm|a\.m\.?|p\.m\.?)?(?![\w])[\s,]*)+)`,
+  'i',
+);
+const REMIND_PLAIN = /[\s,;]*(?:and\s+)?(?:with\s+a\s+reminder|set\s+(?:a\s+)?reminder|add\s+(?:a\s+)?reminder|remind me)\b(?!\s+to\b)/i;
+
+interface ReminderPhrase {
+  text: string;
+  minutes?: number;
+  at?: { date?: string; time: string };
+}
+
+/** Pulls "remind me 1 hour before" / "remind me at 8am" / "no reminder" out of the text. */
+function extractReminder(text: string, now: Date): ReminderPhrase {
+  let m = text.match(REMIND_NONE);
+  if (m) return { text: text.replace(m[0], ' '), minutes: -1 };
+  m = text.match(REMIND_BEFORE);
+  if (m) {
+    let minutes: number;
+    if (/^half/i.test(m[1])) minutes = 30;
+    else {
+      const n = /^\d+$/.test(m[2]) ? Number(m[2]) : (NUMBER_WORDS[m[2].toLowerCase()] ?? 1);
+      const unit = m[3].toLowerCase();
+      minutes = n * (unit.startsWith('w') ? 10_080 : unit.startsWith('d') ? 1440 : unit.startsWith('h') ? 60 : 1);
+    }
+    return { text: text.replace(m[0], ' '), minutes: Math.min(minutes, 43_200) };
+  }
+  m = text.match(REMIND_AT);
+  if (m) {
+    const when = parseWhen(m[1], now);
+    if (when.dueTime) {
+      return { text: text.replace(m[0], ' '), at: { date: when.inferredDate ? undefined : when.dueDate, time: when.dueTime } };
+    }
+  }
+  m = text.match(REMIND_PLAIN);
+  if (m) return { text: text.replace(m[0], ' ') };
+  return { text };
+}
+
+const atMinutes = (date: string, time: string) => {
+  const [y, mo, d] = date.split('-').map(Number);
+  const [h, mi] = time.split(':').map(Number);
+  return new Date(y, mo - 1, d, h, mi).getTime() / 60_000;
+};
+
+/** The due moment used for reminders: the due time, or 9:00 AM for date-only tasks (as in reminders.ts). */
+const dueAtMinutes = (date: string, time?: string) => atMinutes(date, time ?? '09:00');
+
+/** Splits "milk, eggs and bread" into ["Milk", "Eggs", "Bread"]. */
+const splitItems = (list: string) =>
+  list
+    .split(/\s*(?:,|;|\band\b|&|\+)\s*/i)
+    .map((x) => x.trim().replace(/[.!]+$/, ''))
+    .filter(Boolean)
+    .map(capitalize)
+    .slice(0, 50);
+
 export function suggestTask(input: string, opts: { now?: Date; categories?: string[] } = {}): Suggestion {
   const now = opts.now ?? new Date();
   const raw = input.trim();
   if (raw.length < 2) return {};
   const s: Suggestion = {};
 
-  const when = parseWhen(raw, now);
+  // Spoken wrapper words: "Hey DoNext, …, add it".
+  let text = raw.replace(WAKE_WORD, '').replace(SUBMIT_PHRASE, '');
+
+  // "with sub-items A, B and C" and "with a note …" usually come last.
+  let m = text.match(/[\s,;]*(?:with\s+)?(?:the\s+)?(?:sub[- ]?items?|sub[- ]?tasks?|(?:a\s+)?checklist)\s*(?:of|:)?\s+(.+)$/i);
+  if (m) {
+    s.subtasks = splitItems(m[1]);
+    text = text.replace(m[0], ' ');
+  }
+  m = text.match(/[\s,;]*(?:(?:and\s+)?with\s+(?:a\s+|the\s+)?notes?|notes?\s*:|description\s*:)\s*(?:that\s+|saying\s+)?(.+)$/i);
+  if (m) {
+    s.description = capitalize(m[1].trim()).slice(0, 2000);
+    text = text.replace(m[0], ' ');
+  }
+
+  // Reminder phrases first, so "remind me at 8am" isn't read as the due time.
+  const reminder = extractReminder(text, now);
+  text = reminder.text;
+
+  // Explicit category: "category work".
+  m = text.match(/[\s,;]*(?:(?:in|under|to|with)\s+(?:the\s+)?)?category\s+(?:is\s+|of\s+)?([a-z][\w-]*)\b/i);
+  let spokenCategory: string | undefined;
+  if (m) {
+    spokenCategory = m[1];
+    text = text.replace(m[0], ' ');
+  }
+
+  const when = parseWhen(text, now);
   if (when.dueDate) s.dueDate = when.dueDate;
   if (when.dueTime) s.dueTime = when.dueTime;
 
-  const lower = raw.toLowerCase();
+  // Turn "remind me at 8am" into minutes before the due time.
+  if (reminder.minutes !== undefined) s.reminderMinutes = reminder.minutes;
+  else if (reminder.at) {
+    const remindDate = reminder.at.date ?? s.dueDate ?? addDays(now, reminder.at.time > `${pad(now.getHours())}:${pad(now.getMinutes())}` ? 0 : 1);
+    if (!s.dueDate) {
+      // No due date: the reminder time is when it's due.
+      s.dueDate = remindDate;
+      s.dueTime = reminder.at.time;
+      s.reminderMinutes = 0;
+    } else {
+      const before = dueAtMinutes(s.dueDate, s.dueTime) - atMinutes(remindDate, reminder.at.time);
+      if (before >= 0) s.reminderMinutes = Math.round(before);
+      else if (!s.dueTime && remindDate === s.dueDate) {
+        s.dueTime = reminder.at.time; // "tomorrow, remind me at 6pm" → due tomorrow at 6 PM
+        s.reminderMinutes = 0;
+      } else s.reminderMinutes = 0;
+    }
+  }
+
+  const lower = text.toLowerCase();
   if (HIGH.test(lower)) s.priority = 'high';
   else if (LOW.test(lower)) s.priority = 'low';
+  else if (MEDIUM.test(lower)) s.priority = 'medium';
   else if (s.dueDate === todayISO(now)) s.priority = 'high';
 
-  let title = when.text
-    .replace(PRIORITY_NOISE, ' ')
+  let title = when.text.replace(PRIORITY_NOISE, ' ');
+  if (when.dueDate) {
+    // "due date Friday", "end date is Friday", "deadline Friday": the date itself is already taken.
+    title = title.replace(/\b(?:with\s+)?(?:the\s+|a\s+)?(?:due date|end date|deadline|due|ends?|ending)(?:\s+(?:is|on|at|by|of))?\b/gi, ' ');
+  }
+  title = title
+    .replace(/\s*[,;](?:\s*[,;])+/g, ',')
     .replace(/\s+/g, ' ')
-    .replace(/\s+(on|at|by|for|this|next)\s*$/i, '')
     .trim()
-    .replace(/[\s,.;:-]+$/, '');
+    .replace(/^[\s,.;:-]+|[\s,.;:-]+$/g, '');
+  for (let i = 0; i < 3; i++) {
+    const before = title;
+    for (const rx of LEADING_FILLERS) title = title.replace(rx, '');
+    title = title
+      .replace(/(?:[\s,]+(?:on|at|by|for|this|next|and|with|the|is))+\s*$/i, '')
+      .replace(/^(?:and|with|for|to)\s+/i, '')
+      .replace(/[\s,.;:-]+$/, '')
+      .trim();
+    if (title === before) break;
+  }
 
-  s.category = categorize(title.toLowerCase(), opts.categories ?? []);
+  s.category = spokenCategory
+    ? (opts.categories ?? []).find((c) => c.toLowerCase() === spokenCategory!.toLowerCase()) ?? capitalize(spokenCategory.toLowerCase())
+    : categorize(title.toLowerCase(), opts.categories ?? []);
 
-  const items = groceryItems(title);
+  // Sub-items the user said themselves win over grocery lists and templates.
+  const items = s.subtasks ? undefined : groceryItems(title);
   if (items) {
-    s.category = categorize('groceries', opts.categories ?? []);
+    if (!spokenCategory) s.category = categorize('groceries', opts.categories ?? []);
     s.subtasks = items;
     title = 'Buy groceries';
   } else {
     if (s.category && /^groceries$/i.test(s.category) && isGrocery(title)) title = `Buy ${title.toLowerCase()}`; // "milk" → "Buy milk"
-    const template = TEMPLATES.find((tpl) => tpl.match.test(title.toLowerCase()));
+    const template = s.subtasks ? undefined : TEMPLATES.find((tpl) => tpl.match.test(title.toLowerCase()));
     if (template) s.subtasks = template.subtasks;
   }
 

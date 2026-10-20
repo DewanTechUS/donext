@@ -1,7 +1,7 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
-import { IS_DEMO } from '../lib/api';
+import { IS_DEMO, IS_LOCAL } from '../lib/api';
 import { REPO_URL } from '../lib/brand';
 import { Alert } from './Alert';
 import { Footer } from './Footer';
@@ -30,7 +30,7 @@ export function Layout() {
         </div>
       )}
       <main id="main" className="safe-pb-6 mx-auto w-full max-w-5xl flex-1 px-4 pt-6">
-        {!online && status === 'authenticated' && (
+        {!online && status === 'authenticated' && !IS_LOCAL && (
           <Alert kind="warning" className="mb-4">
             You're offline. You can keep adding and editing tasks — they'll sync automatically when you reconnect.
           </Alert>

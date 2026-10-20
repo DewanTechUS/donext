@@ -21,6 +21,7 @@ export const LEAD_OPTIONS = [
   { value: 10, label: '10 minutes before' },
   { value: 30, label: '30 minutes before' },
   { value: 60, label: '1 hour before' },
+  { value: 1440, label: '1 day before' },
 ];
 
 /** Tasks with a date but no time are reminded at this time on their day. */
@@ -47,6 +48,28 @@ export function dueMoment(task: Pick<Task, 'dueDate'> & { dueTime?: string | nul
   const [y, m, d] = task.dueDate.split('-').map(Number);
   const [h, mi] = (task.dueTime ?? DATE_ONLY_TIME).split(':').map(Number);
   return new Date(y, m - 1, d, h, mi);
+}
+
+/** Minutes before the due time to remind for this task, or null for no reminder. */
+export function reminderLead(task: Pick<Task, 'reminderMinutes'>, settings: ReminderSettings): number | null {
+  const lead = task.reminderMinutes ?? settings.lead;
+  return lead < 0 ? null : lead;
+}
+
+/** When this task's reminder should go off, or null (no due date, or no reminder). */
+export function reminderMoment(task: Task, settings: ReminderSettings): Date | null {
+  const due = dueMoment(task);
+  const lead = reminderLead(task, settings);
+  return due && lead !== null ? new Date(due.getTime() - lead * 60_000) : null;
+}
+
+/** "1 hour before", "At the due time"… for a lead in minutes. */
+export function describeLead(minutes: number): string {
+  if (minutes < 0) return 'No reminder';
+  if (minutes === 0) return 'At the due time';
+  if (minutes % 1440 === 0) return `${minutes / 1440} day${minutes === 1440 ? '' : 's'} before`;
+  if (minutes % 60 === 0) return `${minutes / 60} hour${minutes === 60 ? '' : 's'} before`;
+  return `${minutes} minutes before`;
 }
 
 /** Identifies one reminder; changes when the task's due date/time or the lead changes, so it can fire again. */
@@ -76,14 +99,16 @@ export function dueReminders(tasks: Task[], now: Date, settings: ReminderSetting
     if (task.completed || task.deletedAt) continue;
     const due = dueMoment(task);
     if (!due) continue;
-    const key = reminderKey(task, settings.lead);
+    const lead = reminderLead(task, settings);
+    if (lead === null) continue;
+    const key = reminderKey(task, lead);
     const snoozedUntil = state.snoozed[key];
     if (snoozedUntil !== undefined) {
       if (t >= snoozedUntil) out.push({ task, key });
       continue;
     }
     if (state.fired[key]) continue;
-    const at = due.getTime() - settings.lead * 60_000;
+    const at = due.getTime() - lead * 60_000;
     if (t >= at && t < at + GRACE_MS) out.push({ task, key });
   }
   return out;

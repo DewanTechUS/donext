@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { formatDueDate, formatTime } from '../lib/filters';
+import { describeLead } from '../lib/reminders';
 import { suggestTask } from '../lib/smartSuggest';
 import { uuid } from '../lib/id';
 import type { TaskFields } from '../lib/types';
@@ -10,16 +11,18 @@ interface SmartSuggestionsProps {
   categories: string[];
   /** Applies the suggested values. */
   onApply: (patch: Partial<TaskFields>) => void;
+  /** Hidden by the user (for this title). */
+  dismissed: boolean;
+  onDismiss: () => void;
 }
 
 /**
- * Reads the title as you type or speak and offers to fill in the category, priority,
- * date/time and sub-items. Only fields you haven't filled in yourself are suggested.
+ * What to fill in from the title, and the rows that describe it. Only fields the user
+ * hasn't filled in themselves are suggested. Also used to apply suggestions automatically
+ * when a task is saved hands-free.
  */
-export function SmartSuggestions({ fields, categories, onApply }: SmartSuggestionsProps) {
-  const [dismissedFor, setDismissedFor] = useState<string | null>(null);
-  const s = useMemo(() => suggestTask(fields.title, { categories }), [fields.title, categories]);
-
+export function suggestionFor(fields: TaskFields, categories: string[]) {
+  const s = suggestTask(fields.title, { categories });
   const patch: Partial<TaskFields> = {};
   const rows: Array<[string, string]> = [];
   if (s.title && s.title !== fields.title.trim()) {
@@ -42,12 +45,29 @@ export function SmartSuggestions({ fields, categories, onApply }: SmartSuggestio
     patch.dueTime = s.dueTime;
     rows.push(['Time', formatTime(s.dueTime)]);
   }
+  if (s.reminderMinutes !== undefined && fields.reminderMinutes === null && (s.dueDate || fields.dueDate)) {
+    patch.reminderMinutes = s.reminderMinutes;
+    rows.push(['Reminder', describeLead(s.reminderMinutes)]);
+  }
   if (s.subtasks && fields.subtasks.length === 0) {
     patch.subtasks = s.subtasks.map((title) => ({ id: uuid(), title, done: false }));
     rows.push(['Sub-items', s.subtasks.join(', ')]);
   }
+  if (s.description && !fields.description.trim()) {
+    patch.description = s.description;
+    rows.push(['Note', s.description]);
+  }
+  return { patch, rows };
+}
 
-  if (rows.length === 0 || dismissedFor === fields.title) return null;
+/**
+ * Reads the title as you type or speak and offers to fill in the category, priority,
+ * date/time, reminder and sub-items.
+ */
+export function SmartSuggestions({ fields, categories, onApply, dismissed, onDismiss }: SmartSuggestionsProps) {
+  const { patch, rows } = useMemo(() => suggestionFor(fields, categories), [fields, categories]);
+
+  if (rows.length === 0 || dismissed) return null;
 
   return (
     <section
@@ -68,7 +88,7 @@ export function SmartSuggestions({ fields, categories, onApply }: SmartSuggestio
           type="button"
           className="-m-2 flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
           aria-label="Dismiss suggestions"
-          onClick={() => setDismissedFor(fields.title)}
+          onClick={onDismiss}
         >
           <CloseIcon width={16} height={16} />
         </button>

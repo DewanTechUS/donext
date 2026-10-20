@@ -11,6 +11,8 @@ interface VoiceInputProps {
   /** Text in the composer box (the task title). */
   value: string;
   onChange: (text: string) => void;
+  /** Listening stopped after hearing something; gets the final text (for hands-free commands). */
+  onSpeechEnd?: (text: string) => void;
   /** id for the text box, so labels and error messages can point at it. */
   inputId: string;
   /** Validation error for the text, shown under the box. */
@@ -28,7 +30,7 @@ interface VoiceInputProps {
  * as the typing fallback when voice isn't available.
  */
 export const VoiceInput = forwardRef<HTMLTextAreaElement | null, VoiceInputProps>(function VoiceInput(
-  { value, onChange, inputId, error, submitting, speech = speechService },
+  { value, onChange, onSpeechEnd, inputId, error, submitting, speech = speechService },
   ref,
 ) {
   const support = speech.support();
@@ -44,6 +46,7 @@ export const VoiceInput = forwardRef<HTMLTextAreaElement | null, VoiceInputProps
   const heardRef = useRef(false);
   const erroredRef = useRef(false);
   const ignoreRef = useRef(false); // set when the user sends or edits mid-dictation
+  const heardTextRef = useRef(''); // latest text, including what was heard (state may lag behind)
 
   const listening = phase === 'listening' || phase === 'starting';
 
@@ -76,7 +79,8 @@ export const VoiceInput = forwardRef<HTMLTextAreaElement | null, VoiceInputProps
         onTranscript: (text) => {
           if (ignoreRef.current) return;
           heardRef.current = true;
-          onChange(`${baseRef.current}${text}`.slice(0, 200));
+          heardTextRef.current = `${baseRef.current}${text}`.slice(0, 200);
+          onChange(heardTextRef.current);
           setPhase('listening');
         },
         onError: (err) => {
@@ -89,6 +93,7 @@ export const VoiceInput = forwardRef<HTMLTextAreaElement | null, VoiceInputProps
             setNotice(speechErrorMessage('no-speech', support));
           }
           setPhase('idle');
+          if (heardRef.current && !ignoreRef.current) onSpeechEnd?.(heardTextRef.current);
         },
       });
       setPhase((p) => (p === 'starting' ? 'listening' : p));
@@ -128,7 +133,7 @@ export const VoiceInput = forwardRef<HTMLTextAreaElement | null, VoiceInputProps
     phase === 'starting'
       ? 'Starting microphone…'
       : phase === 'listening'
-        ? 'Listening… tap stop to pause, or the arrow to add your task'
+        ? 'Listening… say “add it” to save, or tap the arrow'
         : support === 'none'
           ? "Voice isn't available in this browser — type your task below"
           : value.trim()

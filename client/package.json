@@ -16,14 +16,18 @@
     "cap:android": "npm run cap:sync && cap open android",
     "cap:ios": "npm run cap:sync && cap open ios",
     "build:mobile": "tsc --noEmit && vite build --mode mobile",
+    "build:android": "tsc --noEmit && vite build --mode android && cap sync android && node scripts/configure-native.mjs",
+    "android:assets": "node scripts/generate-reminder-assets.mjs",
     "cap:configure": "node scripts/configure-native.mjs",
     "cap:assets": "npx @capacitor/assets generate --android --ios --iconBackgroundColor \"#012360\" --iconBackgroundColorDark \"#012360\" --splashBackgroundColor \"#012360\" --splashBackgroundColorDark \"#012360\""
   },
   "dependencies": {
     "@capacitor-community/speech-recognition": "^7.0.0",
+    "@capacitor-community/text-to-speech": "^8.0.2",
     "@capacitor/android": "^8.5.2",
     "@capacitor/core": "^8.5.2",
     "@capacitor/ios": "^8.5.2",
+    "@capacitor/local-notifications": "^8.3.1",
     "idb": "^8.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

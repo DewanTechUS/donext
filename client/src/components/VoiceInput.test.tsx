@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { todayISO } from '../lib/filters';
 import { describe, expect, it, vi } from 'vitest';
 import { SpeechError, type MicPermission, type SpeechHandlers, type SpeechService, type SpeechSupport } from '../lib/speech';
 import { KEYS } from '../lib/storage';
@@ -52,7 +53,10 @@ describe('Voice composer', () => {
 
     await user.click(send);
     expect(speech.stop).toHaveBeenCalled();
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'buy milk and eggs' }));
+    // Saving applies the smart suggestions: a grocery list becomes sub-items.
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Buy groceries', category: 'Groceries', subtasks: [expect.objectContaining({ title: 'Milk' }), expect.objectContaining({ title: 'Eggs' })] }),
+    );
   });
 
   it('ignores late speech results after the arrow is pressed', async () => {
@@ -91,7 +95,8 @@ describe('Voice composer', () => {
     expect(box).toHaveValue('Call mum tomorrow');
 
     await user.type(box, '{Enter}');
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'Call mum tomorrow' }));
+    // "tomorrow" becomes the due date when saving.
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'Call mum', dueDate: todayISO(new Date(Date.now() + 864e5)) }));
   });
 
   it('still works as a typing box when voice is unavailable', async () => {
@@ -158,5 +163,62 @@ describe('Voice composer', () => {
     await user.selectOptions(screen.getByLabelText('Priority'), 'high');
     await user.type(box, 'Pay rent{Enter}');
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pay rent', priority: 'high' }));
+  });
+});
+
+describe('Hands-free voice', () => {
+  it('saves a spoken task with its date, priority and reminder when you say "add it"', async () => {
+    skipExplainer();
+    const user = userEvent.setup();
+    const speech = fakeSpeech();
+    const { onSubmit } = renderComposer(speech.service);
+
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
+    await waitFor(() => expect(speech.service.start).toHaveBeenCalled());
+    speech.say('Hey DoNext I have a job tomorrow at 9 priority high remind me 1 hour before add it');
+    speech.end(); // the recogniser stops after the sentence
+
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Job',
+          dueDate: todayISO(new Date(Date.now() + 864e5)),
+          dueTime: '09:00',
+          priority: 'high',
+          reminderMinutes: 60,
+        }),
+      ),
+    );
+  });
+
+  it('waits for the arrow when you don’t say "add it"', async () => {
+    skipExplainer();
+    const user = userEvent.setup();
+    const speech = fakeSpeech();
+    const { onSubmit } = renderComposer(speech.service);
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
+    await waitFor(() => expect(speech.service.start).toHaveBeenCalled());
+    speech.say('call the dentist friday');
+    speech.end();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('runs commands such as "what do I have today?" and shows the answer', async () => {
+    skipExplainer();
+    const user = userEvent.setup();
+    const speech = fakeSpeech();
+    const onSubmit = vi.fn();
+    const onCommand = vi.fn().mockResolvedValue({ text: 'You have 2 tasks today: Job and Pay rent.' });
+    render(<TaskForm voice speech={speech.service} categories={[]} submitLabel="Add task" onSubmit={onSubmit} onCommand={onCommand} />);
+
+    await user.click(screen.getByRole('button', { name: 'Speak your task' }));
+    await waitFor(() => expect(speech.service.start).toHaveBeenCalled());
+    speech.say('what do I have today');
+    speech.end();
+
+    expect(await screen.findByText('You have 2 tasks today: Job and Pay rent.')).toBeInTheDocument();
+    expect(onCommand).toHaveBeenCalledWith({ kind: 'agenda', range: 'today' });
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });

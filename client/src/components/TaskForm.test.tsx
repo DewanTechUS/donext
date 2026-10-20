@@ -29,7 +29,7 @@ describe('TaskForm', () => {
     await user.selectOptions(screen.getByLabelText(/priority/i), 'high');
     await user.type(screen.getByLabelText(/category/i), 'Work');
     await user.type(screen.getByLabelText('Due date'), 'tomorrow 5:30 pm');
-    expect(screen.getByText(/→ .*5:30 PM · 1 day left/)).toBeInTheDocument();
+    expect(screen.getByText(/→ .*5:30 PM · .* left/)).toBeInTheDocument(); // "1 day" or "N hours", depending on the time now
     await user.tab();
     await user.type(screen.getByLabelText('New sub-item'), 'Write notes{Enter}');
     await user.type(screen.getByLabelText('New sub-item'), 'Tag build');
@@ -41,6 +41,7 @@ describe('TaskForm', () => {
       description: 'v1.0',
       dueDate: todayISO(new Date(Date.now() + 864e5)),
       dueTime: '17:30',
+      reminderMinutes: null,
       priority: 'high',
       category: 'Work',
       completed: false,

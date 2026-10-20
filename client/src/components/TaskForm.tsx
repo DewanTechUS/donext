@@ -1,8 +1,11 @@
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { PRIORITIES, type Priority, type SharedList, type TaskFields } from '../lib/types';
 import { Alert } from './Alert';
+import { describeLead, LEAD_OPTIONS, loadReminderSettings } from '../lib/reminders';
 import { DueDateField } from './DueDatePicker';
-import { SmartSuggestions } from './SmartSuggestions';
+import { SmartSuggestions, suggestionFor } from './SmartSuggestions';
+import { canSpeak, speak } from '../lib/sound';
+import { confirmationText, parseVoiceCommand, type VoiceCommand } from '../lib/voiceCommand';
 import { Spinner } from './Spinner';
 import { SubtaskEditor } from './SubtaskEditor';
 import { VoiceInput } from './VoiceInput';
@@ -13,6 +16,7 @@ export const emptyFields: TaskFields = {
   description: '',
   dueDate: null,
   dueTime: null,
+  reminderMinutes: null,
   priority: 'medium',
   category: '',
   completed: false,
@@ -48,6 +52,11 @@ interface TaskFormProps {
    */
   voice?: boolean;
   speech?: SpeechService;
+  /**
+   * Runs a voice command said or typed into the composer ("mark the job as done",
+   * "what do I have today?") and returns the reply to show and read aloud.
+   */
+  onCommand?: (cmd: Exclude<VoiceCommand, { kind: 'add' }>) => Promise<{ text: string; done?: boolean }>;
 }
 
 export function TaskForm({
@@ -60,18 +69,26 @@ export function TaskForm({
   onCancel,
   voice,
   speech,
+  onCommand,
 }: TaskFormProps) {
   const [fields, setFields] = useState<TaskFields>(initial);
   const [errors, setErrors] = useState<Partial<Record<keyof TaskFields, string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  /** Reply to a voice command, shown under the composer. */
+  const [reply, setReply] = useState<string | null>(null);
+  /** The title for which the suggestions card was dismissed. */
+  const [dismissedFor, setDismissedFor] = useState<string | null>(null);
+  const fieldsRef = useRef(fields);
+  fieldsRef.current = fields;
   const titleRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const id = useId();
   const ids = {
     title: `${id}-title`,
     description: `${id}-description`,
     dueDate: `${id}-due`,
+    reminder: `${id}-reminder`,
     priority: `${id}-priority`,
     category: `${id}-category`,
     categories: `${id}-categories`,
@@ -85,24 +102,60 @@ export function TaskForm({
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    const v = validateTask(fields);
+  /** Saves the task (or runs a voice command). `spoken`: started hands-free, so reply out loud. */
+  const save = async (base: TaskFields, spoken: boolean) => {
+    let f = base;
+    if (voice) {
+      const cmd = parseVoiceCommand(base.title);
+      if (cmd.kind !== 'add' && onCommand) {
+        setSaving(true);
+        setFormError(null);
+        try {
+          const res = await onCommand(cmd);
+          setReply(res.text);
+          if (canSpeak()) speak(res.text);
+          if (res.done) setFields((x) => ({ ...x, title: '' }));
+        } catch (err) {
+          setFormError(err instanceof Error ? err.message : 'That didn’t work. Please try again.');
+        } finally {
+          setSaving(false);
+        }
+        return;
+      }
+      // Fill in what was said ("tomorrow at 9, priority high, remind me 1 hour before"),
+      // unless the user dismissed the suggestions.
+      if (dismissedFor !== base.title) f = { ...f, ...suggestionFor(base, categories).patch };
+      if (cmd.kind === 'add' && f.title === base.title) f = { ...f, title: cmd.text || base.title };
+    }
+    const v = validateTask(f);
     setErrors(v);
     if (Object.keys(v).length) {
       if (!v.title) setShowDetails(true); // the problem is in one of the detail fields
       titleRef.current?.focus();
       return;
     }
+    setFields(f);
     setSaving(true);
     setFormError(null);
     try {
-      await onSubmit(fields);
+      await onSubmit(f);
+      if (spoken && canSpeak()) speak(confirmationText(f));
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Could not save the task. Please try again.');
     } finally {
       setSaving(false);
     }
+  };
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    void save(fields, false);
+  };
+
+  /** Listening stopped: run commands and "…, add it" right away, hands-free. */
+  const onSpeechEnd = (text: string) => {
+    const cmd = parseVoiceCommand(text);
+    if (cmd.kind !== 'add' || cmd.submit) void save({ ...fieldsRef.current, title: text }, true);
   };
 
   const errProps = (key: keyof TaskFields) =>
@@ -115,7 +168,11 @@ export function TaskForm({
       }}
       inputId={ids.title}
       value={fields.title}
-      onChange={(text) => set('title', text)}
+      onChange={(text) => {
+        set('title', text);
+        setReply(null);
+      }}
+      onSpeechEnd={onSpeechEnd}
       error={errors.title}
       submitting={saving}
       speech={speech}
@@ -229,10 +286,35 @@ export function TaskForm({
         date={fields.dueDate}
         time={fields.dueTime}
         onChange={({ date, time }) => {
-          setFields((f) => ({ ...f, dueDate: date, dueTime: time }));
+          // A reminder needs a due date.
+          setFields((f) => ({ ...f, dueDate: date, dueTime: time, reminderMinutes: date ? f.reminderMinutes : null }));
           setErrors((er) => ({ ...er, dueDate: undefined, dueTime: undefined }));
         }}
       />
+
+      {fields.dueDate && (
+        <div>
+          <label htmlFor={ids.reminder} className="label">
+            Reminder
+          </label>
+          <select
+            id={ids.reminder}
+            className="input"
+            value={fields.reminderMinutes ?? 'default'}
+            onChange={(e) => set('reminderMinutes', e.target.value === 'default' ? null : Number(e.target.value))}
+          >
+            <option value="default">My default ({describeLead(loadReminderSettings().lead).toLowerCase()})</option>
+            {[...LEAD_OPTIONS.map((o) => o.value), ...(fields.reminderMinutes !== null && fields.reminderMinutes >= 0 && !LEAD_OPTIONS.some((o) => o.value === fields.reminderMinutes) ? [fields.reminderMinutes] : [])]
+              .sort((a, b) => a - b)
+              .map((m) => (
+                <option key={m} value={m}>
+                  {describeLead(m)}
+                </option>
+              ))}
+            <option value={-1}>No reminder</option>
+          </select>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -289,10 +371,29 @@ export function TaskForm({
 
       {titleField}
 
+      {voice && reply && (
+        <Alert kind="success" onDismiss={() => setReply(null)}>
+          {reply}
+        </Alert>
+      )}
+
+      {voice && !fields.title.trim() && !reply && (
+        <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
+          <p className="font-medium text-slate-800 dark:text-slate-100">Try saying:</p>
+          <ul className="mt-1 space-y-1">
+            <li>“I have a job tomorrow at 9, priority high, remind me 1 hour before. Add it.”</li>
+            <li>“What do I have today?”</li>
+            <li>“Mark the job as done.”</li>
+          </ul>
+        </div>
+      )}
+
       {voice && (
         <SmartSuggestions
           fields={fields}
           categories={categories}
+          dismissed={dismissedFor === fields.title}
+          onDismiss={() => setDismissedFor(fields.title)}
           onApply={(patch) => {
             setFields((f) => ({ ...f, ...patch }));
             setErrors({});

@@ -38,6 +38,7 @@ const fields = (title: string, extra: object = {}) => ({
   description: '',
   dueDate: null,
   dueTime: null,
+  reminderMinutes: null,
   priority: 'medium',
   category: '',
   completed: false,

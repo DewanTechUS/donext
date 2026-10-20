@@ -3,6 +3,14 @@ import { LEAD_OPTIONS, loadReminderSettings, saveReminderSettings, type Reminder
 import { canSpeak, playSound, speak, unlockAudio } from '../lib/sound';
 import { BellIcon } from './Icons';
 import { testReminder } from './ReminderCenter';
+import {
+  exactAlarmsAllowed,
+  hasNativeNotifications,
+  notificationPermission,
+  openExactAlarmSettings,
+  requestNotificationPermission,
+  type NotifyPermission,
+} from '../lib/nativeReminders';
 
 const SOUNDS: Array<{ value: ReminderSound; label: string }> = [
   { value: 'chime', label: 'Chime' },
@@ -19,14 +27,15 @@ const chip = (active: boolean) =>
   }`;
 
 type Permission = NotificationPermission | 'unsupported';
-const notificationPermission = (): Permission => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
+const webNotificationPermission = (): Permission => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission);
 
 /** Account → Reminders: sound, read aloud, timing and notifications (saved on this device). */
 export function ReminderSettingsSection() {
   const [s, setS] = useState<ReminderSettings>(loadReminderSettings);
-  const [permission, setPermission] = useState<Permission>(notificationPermission);
+  const [permission, setPermission] = useState<Permission>(webNotificationPermission);
   const id = useId();
   const voice = canSpeak();
+  const native = hasNativeNotifications();
 
   useEffect(() => saveReminderSettings(s), [s]);
   // Opened from a reminder's Settings link: scroll here.
@@ -124,7 +133,9 @@ export function ReminderSettingsSection() {
           </span>
         </label>
 
-        {permission !== 'unsupported' && (
+        {native && <PhoneNotifications />}
+
+        {!native && permission !== 'unsupported' && (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-slate-800/60">
             <span>
               <span className="font-medium">Notifications</span>
@@ -161,9 +172,86 @@ export function ReminderSettingsSection() {
       </fieldset>
 
       <p className="text-xs text-slate-500 dark:text-slate-400">
-        Sound and read-aloud work while DoNext is open, even in a background tab. To be alerted when it's closed, use{' '}
-        <strong>📅 Add to calendar</strong> on a task: your calendar app will ring at the time you choose.
+        {native ? (
+          <>
+            Reminders ring as phone notifications, even when DoNext is closed. Read-aloud works while the app is open, or when you tap a
+            reminder.
+          </>
+        ) : (
+          <>
+            Sound and read-aloud work while DoNext is open, even in a background tab. To be alerted when it's closed, use{' '}
+            <strong>📅 Add to calendar</strong> on a task: your calendar app will ring at the time you choose.
+          </>
+        )}
       </p>
     </section>
+  );
+}
+
+/** Phone app: notification permission and exact-time alarms (Android 12+). */
+function PhoneNotifications() {
+  const [perm, setPerm] = useState<NotifyPermission | null>(null);
+  const [exact, setExact] = useState(true);
+
+  const refresh = () => {
+    void notificationPermission().then(setPerm);
+    void exactAlarmsAllowed().then(setExact);
+  };
+  useEffect(refresh, []);
+  // Coming back from the system settings screen.
+  useEffect(() => {
+    const onVisible = () => document.visibilityState === 'visible' && refresh();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
+
+  const row = 'flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50 p-3 text-sm dark:bg-slate-800/60';
+  return (
+    <div className="space-y-2">
+      <div className={row}>
+        <span>
+          <span className="font-medium">Phone notifications</span>
+          <span className="block text-slate-600 dark:text-slate-400">
+            {perm === 'granted'
+              ? 'On. Reminders ring even when DoNext is closed.'
+              : perm === 'denied'
+                ? 'Off. Turn on notifications for DoNext in your phone’s Settings → Apps → DoNext → Notifications.'
+                : 'Allow notifications so reminders ring even when DoNext is closed.'}
+          </span>
+        </span>
+        {perm === 'prompt' && (
+          <button
+            type="button"
+            className="btn-secondary px-4 py-2 text-sm"
+            onClick={() => void requestNotificationPermission().then((p) => {
+              setPerm(p);
+              window.dispatchEvent(new Event('donext:reminder-settings')); // reschedule
+            })}
+          >
+            Allow
+          </button>
+        )}
+      </div>
+      {perm === 'granted' && !exact && (
+        <div className={row}>
+          <span>
+            <span className="font-medium">Exact times</span>
+            <span className="block text-slate-600 dark:text-slate-400">
+              Allow “Alarms &amp; reminders” so reminders ring exactly on time instead of a few minutes late.
+            </span>
+          </span>
+          <button
+            type="button"
+            className="btn-secondary px-4 py-2 text-sm"
+            onClick={() => void openExactAlarmSettings().then((ok) => {
+              setExact(ok);
+              window.dispatchEvent(new Event('donext:reminder-settings'));
+            })}
+          >
+            Allow
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

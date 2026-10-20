@@ -25,6 +25,7 @@ import {
 } from './Icons';
 import { Spinner } from './Spinner';
 import { SyncIndicator } from './SyncIndicator';
+import { IS_LOCAL } from '../lib/api';
 import { ThemeToggle } from './ThemeToggle';
 
 type IconType = ComponentType<SVGProps<SVGSVGElement>>;
@@ -64,7 +65,7 @@ export function Header() {
     status === 'authenticated'
       ? [
           { to: '/', label: 'My tasks', end: true, Icon: ListIcon },
-          { to: '/lists', label: 'Shared lists', end: false, Icon: UsersIcon, badge: invites.length },
+          ...(IS_LOCAL ? [] : [{ to: '/lists', label: 'Shared lists', end: false, Icon: UsersIcon, badge: invites.length }]),
           { to: '/account', label: 'Account', end: false, Icon: UserIcon },
         ]
       : [];
@@ -76,7 +77,7 @@ export function Header() {
           <AppWordmark />
         </Link>
 
-        {status === 'authenticated' && (
+        {status === 'authenticated' && !IS_LOCAL && (
           <div className="hidden lg:block">
             <SyncIndicator />
           </div>
@@ -237,7 +238,7 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
             </li>
-            {user && (
+            {user && !IS_LOCAL && (
               <li>
                 <button
                   type="button"
@@ -306,8 +307,8 @@ function ProfileCard({ name, email }: { name: string; email: string }) {
       </span>
       <div className="min-w-0 flex-1 leading-tight">
         <p className="truncate text-[15px] font-semibold">{name}</p>
-        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{email}</p>
-        {store && (
+        <p className="truncate text-xs text-slate-500 dark:text-slate-400">{IS_LOCAL ? 'Saved on this device' : email}</p>
+        {store && !IS_LOCAL && (
           <p
             className={`mt-0.5 flex items-center gap-1 text-xs font-medium ${tone}`}
             aria-live="polite"
@@ -322,7 +323,7 @@ function ProfileCard({ name, email }: { name: string; email: string }) {
           </p>
         )}
       </div>
-      {store && (
+      {store && !IS_LOCAL && (
         <button
           type="button"
           className="btn-ghost min-h-touch min-w-touch shrink-0"

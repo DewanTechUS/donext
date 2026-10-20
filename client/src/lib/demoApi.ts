@@ -41,11 +41,14 @@ interface DemoDB {
 
 export const DEMO_STORAGE_KEY = 'donext.demo.v1';
 
+/** Where the data lives: the demo and the local (app-store) build use separate keys. */
+let storageKey = DEMO_STORAGE_KEY;
+
 const empty = (): DemoDB => ({ users: [], tasks: [], lists: [], resets: [] });
 
 function load(): DemoDB {
   try {
-    const raw = localStorage.getItem(DEMO_STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     return raw ? { ...empty(), ...(JSON.parse(raw) as DemoDB) } : empty();
   } catch {
     return empty();
@@ -54,7 +57,7 @@ function load(): DemoDB {
 
 function save(db: DemoDB) {
   try {
-    localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(db));
+    localStorage.setItem(storageKey, JSON.stringify(db));
   } catch {
     throw new ApiError(507, 'This browser has no space left for the demo. Clear some site data and try again.');
   }
@@ -146,7 +149,8 @@ const unassign = (db: DemoDB, listId: string, userId: string) => {
 
 // ---------- the API ----------
 
-export function createDemoApi(): Api {
+export function createDemoApi(opts: { storageKey?: string } = {}): Api {
+  storageKey = opts.storageKey ?? DEMO_STORAGE_KEY;
   /** Runs an operation against the stored database and saves it afterwards. */
   const tx = async <T,>(fn: (db: DemoDB) => T | Promise<T>): Promise<T> => {
     await pause();
@@ -403,6 +407,43 @@ export function createDemoApi(): Api {
     },
 
     /** One tap to explore: a guest account with sample personal tasks and a shared list with "Alex". */
+    localStart: (name: string) =>
+      tx(async (db) => {
+        const user = await signupUser(db, name.trim().slice(0, 80) || 'Me', `${uuid()}@device.local`, `local-${uuid()}`);
+        const ts = now();
+        db.tasks.push({
+          id: uuid(),
+          title: 'Welcome to DoNext 👋',
+          description: 'Tap New task, then the microphone, and just say what you need to do.',
+          dueDate: null,
+          dueTime: null,
+          reminderMinutes: null,
+          priority: 'medium',
+          category: 'Getting started',
+          completed: false,
+          subtasks: [
+            { id: uuid(), title: 'Say: “I have a job tomorrow at 9, priority high, remind me 1 hour before. Add it.”', done: false },
+            { id: uuid(), title: 'Ask: “What do I have today?”', done: false },
+            { id: uuid(), title: 'Say: “Mark the welcome task as done.”', done: false },
+          ],
+          listId: null,
+          assigneeId: null,
+          createdBy: user.id,
+          createdAt: ts,
+          updatedAt: ts,
+          deletedAt: null,
+        });
+        return session(user);
+      }),
+
+    localErase: (token: string) =>
+      tx((db) => {
+        const user = authed(db, token);
+        db.tasks = db.tasks.filter((t) => t.createdBy !== user.id);
+        db.lists = db.lists.filter((l) => l.ownerId !== user.id);
+        db.users = db.users.filter((u) => u.id !== user.id);
+      }),
+
     demoStart: () =>
       tx(async (db) => {
         const tag = uuid().slice(0, 8);
@@ -433,6 +474,7 @@ export function createDemoApi(): Api {
           description: '',
           dueDate: null,
           dueTime: null,
+          reminderMinutes: null,
           priority: 'medium',
           category: '',
           completed: false,

@@ -4,6 +4,8 @@ DoNext is packaged as native iOS and Android apps with **Capacitor 8**. The nati
 
 > **Nothing has been submitted to Apple or Google.** This guide explains how *you* build, sign, and submit the apps. Every step that needs a developer account, a signing key, or a store dashboard is marked 🔑. Store approval is decided by Apple and Google and is not guaranteed.
 
+> **Publishing on Google Play?** Follow [GOOGLE-PLAY.md](GOOGLE-PLAY.md). The Play version is the local app (`npm run build:android`): tasks stay on the phone, and no server is needed.
+
 ## What's already set up
 
 | | Status |

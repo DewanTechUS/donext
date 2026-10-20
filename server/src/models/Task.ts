@@ -25,6 +25,8 @@ const taskSchema = new Schema(
     description: { type: String, default: '', maxlength: 2000 },
     dueDate: { type: String, default: null }, // YYYY-MM-DD (timezone-free calendar date)
     dueTime: { type: String, default: null }, // HH:MM local time, only with a dueDate
+    /** Minutes before the due time to remind; null = the user's default, -1 = no reminder. */
+    reminderMinutes: { type: Number, default: null },
     priority: { type: String, enum: PRIORITIES, default: 'medium' },
     category: { type: String, default: '', trim: true, maxlength: 50 },
     completed: { type: Boolean, default: false },
@@ -58,6 +60,7 @@ export interface TaskDTO {
   description: string;
   dueDate: string | null;
   dueTime: string | null;
+  reminderMinutes: number | null;
   priority: Priority;
   category: string;
   completed: boolean;
@@ -78,6 +81,7 @@ export function toTaskDTO(t: TaskAttrs): TaskDTO {
     description: t.description ?? '',
     dueDate: t.dueDate ?? null,
     dueTime: t.dueDate ? (t.dueTime ?? null) : null,
+    reminderMinutes: typeof t.reminderMinutes === 'number' ? t.reminderMinutes : null,
     priority: t.priority as Priority,
     category: t.category ?? '',
     completed: Boolean(t.completed),

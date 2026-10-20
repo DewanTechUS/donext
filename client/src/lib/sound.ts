@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import type { ReminderSound } from './reminders';
 
 /**
@@ -68,12 +70,23 @@ export function playSound(kind: ReminderSound) {
   }
 }
 
-export const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+// Android's WebView has no Speech Synthesis, so the app uses the device's text-to-speech engine.
+const nativeTts = () => Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('TextToSpeech');
+const webTts = () => typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+
+export const canSpeak = () => nativeTts() || webTts();
 
 /** Reads text aloud with the device's voice (after the sound, if any). */
 export function speak(text: string, delayMs = 0) {
   if (!canSpeak()) return;
   setTimeout(() => {
+    if (nativeTts()) {
+      void TextToSpeech.stop()
+        .catch(() => undefined)
+        .then(() => TextToSpeech.speak({ text, lang: navigator.language || 'en-US', rate: 1, category: 'playback' }))
+        .catch(() => undefined);
+      return;
+    }
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 1;

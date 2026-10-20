@@ -18,6 +18,7 @@ const task = (over: Partial<Task>): Task => ({
   description: '',
   dueDate: '2026-10-13',
   dueTime: '17:00',
+  reminderMinutes: null,
   priority: 'medium',
   category: '',
   completed: false,

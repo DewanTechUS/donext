@@ -10,6 +10,7 @@ const task: Task = {
   description: '',
   dueDate: '2026-11-01',
   dueTime: null,
+  reminderMinutes: null,
   priority: 'high',
   category: '',
   completed: false,

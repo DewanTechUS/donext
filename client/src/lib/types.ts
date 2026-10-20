@@ -15,6 +15,8 @@ export interface TaskFields {
   dueDate: string | null;
   /** Local time HH:MM (only with a due date). */
   dueTime: string | null;
+  /** Minutes before the due time to remind; null = my default setting, -1 = no reminder. */
+  reminderMinutes: number | null;
   priority: Priority;
   category: string;
   completed: boolean;

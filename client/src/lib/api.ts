@@ -12,6 +12,12 @@ const API_BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
  */
 export const IS_DEMO = import.meta.env.VITE_DEMO === 'true';
 
+/**
+ * App-store builds (VITE_LOCAL=true, e.g. the Google Play app) also run without a server:
+ * tasks are stored on the device, there's no sign-up, and nothing is sent anywhere.
+ */
+export const IS_LOCAL = import.meta.env.VITE_LOCAL === 'true';
+
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
@@ -89,8 +95,12 @@ const realApi = {
   },
   /** Demo only: creates a ready-to-explore account with sample tasks and a shared list. */
   demoStart: undefined as undefined | (() => Promise<Session>),
+  /** Local app only: creates the on-device profile (no account, no password). */
+  localStart: undefined as undefined | ((name: string) => Promise<Session>),
+  /** Local app only: erases the profile and all tasks on this device. */
+  localErase: undefined as undefined | ((token: string) => Promise<void>),
 };
 
 export type Api = typeof realApi;
 
-export const api: Api = IS_DEMO ? createDemoApi() : realApi;
+export const api: Api = IS_DEMO || IS_LOCAL ? createDemoApi(IS_LOCAL ? { storageKey: 'donext.local.v1' } : {}) : realApi;

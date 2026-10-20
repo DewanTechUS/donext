@@ -10,3 +10,8 @@ coverage/
 client/dev-dist/
 server/.data/
 !client/.env.demo
+!client/.env.android
+# Android release signing: keep these private and backed up (never commit them).
+client/android/keystore.properties
+*.jks
+*.keystore

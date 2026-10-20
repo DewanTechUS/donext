@@ -12,6 +12,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TasksContext';
 import { categoriesOf, defaultFilters, filterTasks, type TaskFilters } from '../lib/filters';
 import type { SharedList, Task } from '../lib/types';
+import { agendaText, findTask, type VoiceCommand } from '../lib/voiceCommand';
+import { IS_LOCAL } from '../lib/api';
 
 /** Which tasks to show: my personal tasks, one shared list, or everything. */
 type Scope = 'personal' | 'all' | string;
@@ -54,6 +56,15 @@ export default function TasksPage() {
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     }
+  };
+
+  /** "Mark the job as done" / "What do I have today?", said or typed into the new-task box. */
+  const runCommand = async (cmd: Exclude<VoiceCommand, { kind: 'add' }>) => {
+    if (cmd.kind === 'agenda') return { text: agendaText(tasks, cmd.range) };
+    const task = findTask(tasks, cmd.query);
+    if (!task) return { text: `I couldn’t find an open task called “${cmd.query}”.` };
+    await store!.update(task.id, { completed: true });
+    return { text: `Marked “${task.title}” as done. Nice work!`, done: true };
   };
 
   if (storageError) return <Alert>{storageError}</Alert>;
@@ -112,6 +123,7 @@ export default function TasksPage() {
       )}
       {actionError && <Alert onDismiss={() => setActionError(null)}>{actionError}</Alert>}
 
+      {!IS_LOCAL && (
       <div className="flex flex-wrap items-center gap-2">
         <div role="group" aria-label="Which list to show" className="flex max-w-full gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
           {tabs.map((t) => (
@@ -134,6 +146,7 @@ export default function TasksPage() {
           <UsersIcon width={18} height={18} /> {lists.length ? 'Manage lists' : 'Share with others'}
         </Link>
       </div>
+      )}
 
       {currentList && (
         <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -194,6 +207,7 @@ export default function TasksPage() {
             lists={lists}
             meId={user.id}
             submitLabel="Add task"
+            onCommand={runCommand}
             onCancel={() => setCreating(false)}
             onSubmit={async (fields) => {
               await store.create(fields);

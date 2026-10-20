@@ -68,6 +68,8 @@ export const taskFieldsSchema = z
     description: z.string().max(2000, 'Description must be at most 2000 characters').default(''),
     dueDate: calendarDate.nullable().default(null),
     dueTime: clockTime.nullable().default(null),
+    // Minutes before the due time (up to 30 days); -1 = no reminder; null = the user's default.
+    reminderMinutes: z.number().int().min(-1).max(43_200).nullable().default(null),
     priority: z.enum(PRIORITIES).default('medium'),
     category: z.string().trim().max(50, 'Category must be at most 50 characters').default(''),
     completed: z.boolean().default(false),

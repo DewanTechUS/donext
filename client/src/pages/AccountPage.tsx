@@ -7,7 +7,8 @@ import { Spinner } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TasksContext';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
-import { api, ApiError } from '../lib/api';
+import { api, ApiError, IS_LOCAL } from '../lib/api';
+import { Capacitor } from '@capacitor/core';
 
 export default function AccountPage() {
   const { user, logout, logoutEverywhere, deleteAccount } = useAuth();
@@ -66,9 +67,13 @@ export default function AccountPage() {
 
       <ProfileSection />
       <ReminderSettingsSection />
-      <PasswordSection />
-      <DataSection />
+      {!IS_LOCAL && <PasswordSection />}
+      {/* Downloading a file isn't supported inside the Android app's web view. */}
+      {!(IS_LOCAL && Capacitor.isNativePlatform()) && <DataSection />}
+      {IS_LOCAL && <EraseLocalSection />}
 
+      {!IS_LOCAL && (
+      <>
       <section className="card space-y-3 p-5" aria-labelledby="session-h">
         <h2 id="session-h" className="text-lg font-semibold">
           Sessions
@@ -127,6 +132,8 @@ export default function AccountPage() {
           </button>
         </form>
       </section>
+      </>
+      )}
 
       {confirmLogout && (
         <Modal title="Unsynced changes" onClose={() => setConfirmLogout(false)}>
@@ -194,7 +201,7 @@ function ProfileSection() {
             <input id={nameId} className="input" value={name} maxLength={80} autoComplete="name" onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="btn-primary flex-1" disabled={busy || !online}>
+            <button type="submit" className="btn-primary flex-1" disabled={busy || (!online && !IS_LOCAL)}>
               {busy && <Spinner className="h-4 w-4" />}
               Save
             </button>
@@ -302,6 +309,49 @@ function PasswordSection() {
   );
 }
 
+/** Local app: there is no account, so "delete my data" erases everything on this device. */
+function EraseLocalSection() {
+  const { eraseLocal } = useAuth();
+  const navigate = useNavigate();
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const erase = async () => {
+    setBusy(true);
+    await eraseLocal();
+    navigate('/', { replace: true });
+  };
+
+  return (
+    <section className="card space-y-3 border-red-300 p-5 dark:border-red-900" aria-labelledby="erase-h">
+      <h2 id="erase-h" className="text-lg font-semibold text-red-700 dark:text-red-400">
+        Erase all data
+      </h2>
+      <p className="text-sm text-slate-600 dark:text-slate-400">
+        Your tasks are stored only on this device. Erasing removes your name, tasks and reminders from it. This can’t be undone.
+        Uninstalling the app also erases everything.
+      </p>
+      <button type="button" className="btn-danger w-full sm:w-auto" onClick={() => setConfirming(true)}>
+        Erase all data
+      </button>
+      {confirming && (
+        <Modal title="Erase all data?" onClose={() => setConfirming(false)}>
+          <p className="mb-5 text-slate-700 dark:text-slate-300">All your tasks and settings on this device will be permanently deleted.</p>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" className="btn-secondary" onClick={() => setConfirming(false)}>
+              Cancel
+            </button>
+            <button type="button" className="btn-danger" onClick={() => void erase()} disabled={busy}>
+              {busy && <Spinner className="h-4 w-4" />}
+              Erase everything
+            </button>
+          </div>
+        </Modal>
+      )}
+    </section>
+  );
+}
+
 function DataSection() {
   const { token } = useAuth();
   const online = useOnlineStatus();
@@ -337,7 +387,7 @@ function DataSection() {
       </h2>
       <p className="text-sm text-slate-600 dark:text-slate-400">Download a copy of your account details and all your tasks as a JSON file.</p>
       {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
-      <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => void onExport()} disabled={busy || !online}>
+      <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => void onExport()} disabled={busy || (!online && !IS_LOCAL)}>
         {busy && <Spinner className="h-4 w-4" />}
         Download my data
       </button>

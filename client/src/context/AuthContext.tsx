@@ -26,6 +26,10 @@ interface AuthValue {
   markExpired: () => void;
   /** Demo build only: signs in to a new guest account with sample data. */
   startDemo: () => Promise<void>;
+  /** Local app only: creates the on-device profile. */
+  startLocal: (name: string) => Promise<void>;
+  /** Local app only: erases everything on this device and returns to the welcome screen. */
+  eraseLocal: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -96,6 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       startDemo: async () => {
         if (!api.demoStart) throw new Error('The instant demo is only available in the demo version.');
         start(await api.demoStart());
+      },
+      startLocal: async (name) => {
+        if (!api.localStart) throw new Error('Only available in the app.');
+        start(await api.localStart(name));
+      },
+      eraseLocal: async () => {
+        if (!session || !api.localErase) return;
+        await api.localErase(session.token);
+        await clear(session.user.id);
       },
       resetPassword: async (resetToken, password) => start(await api.resetPassword(resetToken, password)),
       updateName: async (name) => {

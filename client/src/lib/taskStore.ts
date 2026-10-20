@@ -33,6 +33,7 @@ const pickFields = (t: TaskFields): TaskFields => ({
   description: t.description,
   dueDate: t.dueDate || null,
   dueTime: (t.dueDate && t.dueTime) || null,
+  reminderMinutes: t.dueDate && typeof t.reminderMinutes === 'number' ? t.reminderMinutes : null,
   priority: t.priority,
   category: t.category.trim(),
   completed: t.completed,
@@ -46,7 +47,12 @@ const pickFields = (t: TaskFields): TaskFields => ({
 });
 
 /** Fills in fields added after a task was stored (older tasks have no time or sub-items). */
-export const withDefaults = (t: Task): Task => ({ ...t, dueTime: t.dueTime ?? null, subtasks: t.subtasks ?? [] });
+export const withDefaults = (t: Task): Task => ({
+  ...t,
+  dueTime: t.dueTime ?? null,
+  reminderMinutes: t.reminderMinutes ?? null,
+  subtasks: t.subtasks ?? [],
+});
 
 const parseJSON =<T,>(raw: string | null, fallback: T): T => {
   try {

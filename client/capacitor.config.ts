@@ -12,6 +12,15 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
   },
+  plugins: {
+    // Reminder notifications: white status-bar icon and chime from android/app/src/main/res
+    // (made by `npm run android:assets`).
+    LocalNotifications: {
+      smallIcon: 'ic_stat_donext',
+      iconColor: '#006FEF',
+      sound: 'chime.wav',
+    },
+  },
 };
 
 export default config;

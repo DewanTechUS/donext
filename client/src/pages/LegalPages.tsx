@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { IS_DEMO } from '../lib/api';
+import { IS_DEMO, IS_LOCAL } from '../lib/api';
 import { COMPANY_LEGAL_NAME, LEGAL, LEGAL_IS_DRAFT, REPO_URL, type LegalField } from '../lib/brand';
 
 /**
@@ -39,32 +39,53 @@ function DemoLegal({ kind }: { kind: 'privacy' | 'terms' }) {
   return (
     <article className="prose-page mx-auto max-w-3xl">
       <h1 className="mb-1 text-3xl font-bold tracking-tight">{kind === 'privacy' ? 'Privacy Policy' : 'Terms of Use'}</h1>
-      <p className="text-sm">For the DoNext live demo · {COMPANY_LEGAL_NAME}</p>
+      <p className="text-sm">
+        For the DoNext app for Android and the DoNext live demo · {COMPANY_LEGAL_NAME} · Effective October 20, 2026
+      </p>
 
       {kind === 'privacy' ? (
         <>
           <h2>The short version</h2>
           <p>
-            This demo runs entirely in your browser. Nothing you type, including accounts, tasks, lists and settings, is sent to
-            DewanTech or to any server. We don't use cookies, analytics, ads or tracking.
+            DoNext keeps your tasks on your own device. We (DewanTech) don't collect, receive, sell or share your personal data. There is no
+            account to create, and the app has no ads, analytics or tracking.
           </p>
           <h2>What is stored, and where</h2>
           <ul>
-            <li>Demo accounts, tasks, lists and reminder settings are saved in this browser's storage (localStorage and IndexedDB) on your device.</li>
-            <li>Passwords you choose in the demo are stored only as a SHA-256 hash, and only in your browser.</li>
-            <li>To delete everything, log out and clear this site's data in your browser settings.</li>
+            <li>
+              Your name (if you enter one), tasks, sub-items, due dates, reminders and settings are saved only on your device, in the app's
+              private storage (or, for the live demo, in your browser's storage).
+            </li>
+            <li>Nothing is uploaded to DewanTech or to any server we run.</li>
+            <li>
+              To delete everything, use <strong>Account → Erase all data</strong>, or uninstall the app (in the demo: clear this site's
+              data in your browser).
+            </li>
           </ul>
-          <h2>Microphone and voice</h2>
+          <h2>Permissions the app asks for</h2>
+          <ul>
+            <li>
+              <strong>Microphone and speech recognition</strong>, only when you tap the microphone, to turn your voice into text. Speech is
+              processed by your device's speech service (on Android, usually Google's speech recognition; in a browser, the browser's
+              provider), under that provider's privacy policy. DoNext receives only the resulting text and never records or stores audio.
+            </li>
+            <li>
+              <strong>Notifications</strong> and <strong>alarms and reminders</strong>, so your reminders can ring at the right time, even
+              when the app is closed. Reminders are scheduled on your device.
+            </li>
+            <li>
+              <strong>Text-to-speech</strong>: if you turn on read-aloud, reminders and answers are spoken by your device's built-in voice.
+            </li>
+          </ul>
+          <h2>Children</h2>
+          <p>DoNext is not directed to children under 13, and we don't knowingly collect information from anyone.</p>
+          <h2>Hosting of this page and the demo</h2>
           <p>
-            If you use voice input, your browser asks for microphone permission. Speech recognition is provided by your browser or
-            operating system (for example Google in Chrome, Apple in Safari) under their own privacy policies. DoNext only receives the
-            resulting text. Reading reminders aloud uses your device's built-in voice.
-          </p>
-          <h2>Hosting</h2>
-          <p>
-            The demo's files are served by GitHub Pages, which, like any web host, may log basic request information such as IP
+            This page and the live demo are served by GitHub Pages, which, like any web host, may log basic request information such as IP
             addresses. See GitHub's privacy statement for details.
           </p>
+          <h2>Changes</h2>
+          <p>If this policy changes, we'll update this page and its effective date.</p>
           <h2>Contact</h2>
           <p>
             Questions: <a href={`mailto:${LEGAL.privacyEmail}`}>{LEGAL.privacyEmail}</a>.
@@ -72,14 +93,15 @@ function DemoLegal({ kind }: { kind: 'privacy' | 'terms' }) {
         </>
       ) : (
         <>
-          <h2>A demo, provided as is</h2>
+          <h2>Free, and provided as is</h2>
           <p>
-            This live demo lets you try DoNext for free, with no sign-up. It's provided <strong>as is</strong>, without warranties
-            of any kind. Data lives only in your browser and can be lost at any time (for example when you clear your browser data),
-            so please don't rely on it for anything important.
+            DoNext (the Android app and the live demo) is free. It's provided <strong>as is</strong>, without warranties of any kind.
+            Your data lives only on your device and can be lost, for example if you uninstall the app, erase its data or clear your
+            browser. Reminders depend on your device's settings (such as notification and battery settings) and may be late or missed,
+            so please don't rely on DoNext for anything critical.
           </p>
           <h2>Acceptable use</h2>
-          <p>Please don't use the demo to break the law or to attack, overload or misuse the site.</p>
+          <p>Please don't use DoNext to break the law or to attack, overload or misuse it.</p>
           <h2>Open-source code and our name</h2>
           <p>
             DoNext's code is open source under the <a href={`${REPO_URL}/blob/main/LICENSE`}>MIT License</a>. The DoNext and
@@ -105,7 +127,7 @@ function DemoLegal({ kind }: { kind: 'privacy' | 'terms' }) {
 }
 
 export function PrivacyPage() {
-  if (IS_DEMO) return <DemoLegal kind="privacy" />;
+  if (IS_DEMO || IS_LOCAL) return <DemoLegal kind="privacy" />;
   return (
     <article className="prose-page mx-auto max-w-3xl">
       <h1 className="mb-1 text-3xl font-bold tracking-tight">Privacy Policy</h1>
@@ -247,7 +269,7 @@ export function PrivacyPage() {
 }
 
 export function TermsPage() {
-  if (IS_DEMO) return <DemoLegal kind="terms" />;
+  if (IS_DEMO || IS_LOCAL) return <DemoLegal kind="terms" />;
   return (
     <article className="prose-page mx-auto max-w-3xl">
       <h1 className="mb-1 text-3xl font-bold tracking-tight">Terms of Service</h1>

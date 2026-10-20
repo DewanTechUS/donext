@@ -10,7 +10,7 @@ Built by **[Dewan Mahmud](https://dewanmahmud.com)** · DewanTech™: *Technolog
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Dewan%20Mahmud-0a66c2?logo=linkedin)](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)
 [![Website](https://img.shields.io/badge/Website-dewanmahmud.com-012360)](https://dewanmahmud.com)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
-![Tests](https://img.shields.io/badge/tests-137%20passing-22c55e)
+![Tests](https://img.shields.io/badge/tests-155%20passing-22c55e)
 ![PWA](https://img.shields.io/badge/PWA-offline%20ready-5a0fc8)
 
 <p>
@@ -44,6 +44,7 @@ Built by **[Dewan Mahmud](https://dewanmahmud.com)** · DewanTech™: *Technolog
 | This README | Features, MongoDB setup, local development, tests, configuration, architecture |
 | [docs/HOSTINGER.md](docs/HOSTINGER.md) | **Step-by-step deployment on Hostinger** (Node.js Web App, settings and environment variables) |
 | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deploying to your own domain (subdomain or sub-path), free email setup, Docker, production checklist |
+| [docs/GOOGLE-PLAY.md](docs/GOOGLE-PLAY.md) | **Publishing the Android app on Google Play**: build, signing, store listing text, Data safety answers, closed test |
 | [docs/MOBILE.md](docs/MOBILE.md) | iOS/Android builds, microphone permissions, signing, App Store and Google Play submission requirements |
 
 ## Two ways to run DoNext
@@ -72,6 +73,13 @@ To **run your own server** for real accounts and sync across devices, follow [Mo
   - "milk eggs and bread" → *Buy groceries*, category Groceries, with sub-items Milk, Eggs and Bread.
   - "pay electricity bill tomorrow 5pm urgent" → *Pay electricity bill*, category Bills, priority High, due tomorrow at 5:00 PM.
   - It also offers ready-made checklists for trips, cleaning, parties and more, and reuses your own category names. It runs on your device with built-in rules: no AI service, no API key, no cost, and nothing you type leaves the device. It works offline too. The rules are in [`client/src/lib/smartSuggest.ts`](client/src/lib/smartSuggest.ts) and are easy to extend.
+- **Hands-free voice commands:**
+  - *"Hey DoNext, I have a job tomorrow at 9, priority high, remind me 1 hour before. Add it."* creates the task with its date, time, priority and reminder, and saves it without a tap.
+  - It also understands *"due date / end date / deadline Friday"*, *"remind me at 8am"*, *"no reminder"*, *"category work"*, *"with sub-items A, B and C"* and *"with a note …"*.
+  - Ask *"What do I have today?"*, *"What's due tomorrow?"* or *"Anything overdue?"*, and DoNext answers on screen and out loud.
+  - *"Mark the job as done"* or *"I finished the report"* completes a task.
+  - Each task can have its own reminder: at the due time, or 10 or 30 minutes, 1 hour or 1 day before, or none.
+- **Android app (Google Play):** a private, no-account build (`npm run build:android`) that stores tasks on the phone. Reminders ring as real notifications with a chime, even when the app is closed, and read-aloud uses the phone's text-to-speech. See [docs/GOOGLE-PLAY.md](docs/GOOGLE-PLAY.md).
 - **Finding tasks:** search across title, description, category, and sub-items. Filter by status, priority, or category, and sort by due date, priority, or newest. Overdue tasks are highlighted.
 - **Shared lists (collaboration):**
   - Create a list such as "Family" or "Team" and invite people by email. They get an email, and see the invitation when they log in or after they sign up with that address.
@@ -226,7 +234,7 @@ Other useful commands:
 npm test
 ```
 
-There are 137 tests.
+There are 155 tests.
 
 **Server: 43 tests.** Supertest against a real in-memory MongoDB.
 - Shared lists: email invitations (including people who sign up later), accept or decline, and invitation checks. Members see and edit list tasks, outsiders don't, and personal tasks stay private. Only the creator or list owner can delete a task. Assignees must be list members.

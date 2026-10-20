@@ -10,7 +10,19 @@ import {
   saveReminderState,
   type ReminderState,
 } from '../lib/reminders';
+import {
+  hasNativeNotifications,
+  nativeNotificationsActive,
+  notificationPermission,
+  onReminderTapped,
+  plannedReminders,
+  requestNotificationPermission,
+  syncNativeReminders,
+} from '../lib/nativeReminders';
 import { playSound, speak, unlockAudio } from '../lib/sound';
+import { storage } from '../lib/storage';
+
+const NOTIFY_ASKED = 'dt.notifyAsked';
 import type { Task } from '../lib/types';
 import { BellIcon, CloseIcon } from './Icons';
 
@@ -42,7 +54,9 @@ export function ReminderCenter() {
     if (!items.length) return;
     const settings = loadReminderSettings();
     setShown((s) => [...s.filter((x) => !items.some((i) => i.key === x.key)), ...items]);
-    playSound(settings.sound);
+    // In the phone app the system notification already plays the chime.
+    const systemRings = nativeNotificationsActive && items.some((i) => !i.test);
+    if (!systemRings) playSound(settings.sound);
     if (settings.speak) speak(items.map((i) => `Reminder. ${i.text}`).join(' '), settings.sound === 'none' ? 0 : 900);
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.visibilityState === 'hidden') {
       for (const i of items) {
@@ -101,6 +115,39 @@ export function ReminderCenter() {
     const id = setTimeout(check, 500);
     return () => clearTimeout(id);
   }, [store, tasks, check]);
+
+  // Phone app: (re)schedule system notifications so reminders ring even when DoNext is closed.
+  const [settingsVersion, setSettingsVersion] = useState(0);
+  useEffect(() => {
+    const onSettings = () => setSettingsVersion((v) => v + 1);
+    window.addEventListener('donext:reminder-settings', onSettings);
+    return () => window.removeEventListener('donext:reminder-settings', onSettings);
+  }, []);
+  useEffect(() => {
+    if (!store || !hasNativeNotifications()) return;
+    const id = setTimeout(() => {
+      void (async () => {
+        const settings = loadReminderSettings();
+        // Ask for notification permission the first time there's a reminder to deliver.
+        if (plannedReminders(tasks, settings).length && !storage.get<boolean>(NOTIFY_ASKED)) {
+          storage.set(NOTIFY_ASKED, true);
+          if ((await notificationPermission()) === 'prompt') await requestNotificationPermission();
+        }
+        await syncNativeReminders(tasks, settings);
+      })();
+    }, 800);
+    return () => clearTimeout(id);
+  }, [store, tasks, settingsVersion]);
+
+  // Tapping a reminder notification opens the app on its reminder card.
+  useEffect(
+    () =>
+      onReminderTapped((taskId) => {
+        const task = tasksRef.current.find((t) => t.id === taskId);
+        if (task) setShown((s) => [...s.filter((x) => x.task.id !== taskId), { key: `tap-${taskId}-${Date.now()}`, task, text: reminderText(task) }]);
+      }),
+    [],
+  );
 
   const close = (key: string) => setShown((s) => s.filter((x) => x.key !== key));
 
