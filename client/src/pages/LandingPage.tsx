@@ -82,6 +82,10 @@ function LocalWelcome() {
           />
         </div>
         {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
+        <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/50 dark:text-amber-100">
+          <strong>Your tasks are saved only on this device.</strong> We can’t back them up or recover them. Uninstalling the app,
+          clearing its data or changing phones deletes them, so you’re responsible for keeping anything important.
+        </p>
         <button type="submit" className="btn-primary w-full text-lg" disabled={starting}>
           {starting && <Spinner className="h-5 w-5" label="Getting started" />}
           Get started

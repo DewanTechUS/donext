@@ -100,6 +100,14 @@ function DemoLegal({ kind }: { kind: 'privacy' | 'terms' }) {
             browser. Reminders depend on your device's settings (such as notification and battery settings) and may be late or missed,
             so please don't rely on DoNext for anything critical.
           </p>
+          <h2>Your data is your responsibility</h2>
+          <p>
+            DoNext saves your tasks <strong>only on your own device</strong>. DewanTech never receives a copy, so we{' '}
+            <strong>cannot see, back up, restore or recover</strong> your tasks. You alone are responsible for keeping them and for
+            keeping your own copy of anything important. Your tasks are permanently lost if you uninstall the app, erase or clear its
+            data, reset, lose or replace your device, or clear your browser (for the live demo). DewanTech is not responsible for any lost
+            data.
+          </p>
           <h2>Acceptable use</h2>
           <p>Please don't use DoNext to break the law or to attack, overload or misuse it.</p>
           <h2>Open-source code and our name</h2>

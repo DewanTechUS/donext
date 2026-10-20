@@ -328,7 +328,7 @@ function EraseLocalSection() {
         Erase all data
       </h2>
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        Your tasks are stored only on this device. Erasing removes your name, tasks and reminders from it. This can’t be undone.
+        Your tasks are stored only on this device: DoNext can’t back them up or recover them, and you’re responsible for keeping your own copy of anything important. Erasing removes your name, tasks and reminders from this device. This can’t be undone.
         Uninstalling the app also erases everything.
       </p>
       <button type="button" className="btn-danger w-full sm:w-auto" onClick={() => setConfirming(true)}>

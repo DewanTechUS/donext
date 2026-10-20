@@ -117,6 +117,7 @@ STAY ON TOP OF IT
 PRIVATE BY DESIGN
 • No account, no sign-up
 • Your tasks stay on your phone: nothing is sent to us
+• Because tasks are stored only on your device, we can't back them up or recover them: uninstalling the app deletes them
 • No ads, no tracking
 • Works offline
 
