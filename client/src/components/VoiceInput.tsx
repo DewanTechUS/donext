@@ -133,7 +133,7 @@ export const VoiceInput = forwardRef<HTMLTextAreaElement | null, VoiceInputProps
     phase === 'starting'
       ? 'Starting microphone…'
       : phase === 'listening'
-        ? 'Listening… say “add it” to save, or tap the arrow'
+        ? 'Listening… take your time. Say “add it” to save, or tap stop'
         : support === 'none'
           ? "Voice isn't available in this browser — type your task below"
           : value.trim()

@@ -115,30 +115,57 @@ export const speechService: SpeechService = {
     rec.lang = lang;
     // Keep listening through pauses until the user taps stop or send. Android Chrome repeats
     // phrases in continuous mode, so there it stops after each phrase (tap the mic to add more).
-    rec.continuous = !/Android/i.test(navigator.userAgent);
+    const android = /Android/i.test(navigator.userAgent);
+    rec.continuous = !android;
     rec.interimResults = true;
     rec.maxAlternatives = 1;
     let ended = false;
+    let userStopped = false;
+    // On Android each round ends at a pause; rounds are joined like the native app.
+    let committed = '';
+    let current = '';
+    let heardThisRound = false;
+    const startedAt = Date.now();
+    const transcript = () => [committed, current].filter(Boolean).join(' ').trim();
     rec.onresult = (e) => {
       let text = '';
       for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
-      handlers.onTranscript(text.trim());
+      current = text.trim();
+      heardThisRound = true;
+      handlers.onTranscript(transcript());
     };
     rec.onerror = (e) => {
-      if (e.error !== 'aborted') handlers.onError(mapWebError(e.error));
+      // Silence after something was said just means the user finished.
+      if (e.error === 'aborted' || (e.error === 'no-speech' && transcript())) return;
+      handlers.onError(mapWebError(e.error));
     };
     rec.onend = () => {
-      if (!ended) {
-        ended = true;
-        handlers.onEnd();
+      if (ended) return;
+      if (android && !userStopped && heardThisRound && !SAID_DONE.test(transcript()) && Date.now() - startedAt < MAX_LISTEN_MS) {
+        committed = transcript();
+        current = '';
+        heardThisRound = false;
+        try {
+          rec.start();
+          return;
+        } catch {
+          /* fall through and end */
+        }
       }
+      ended = true;
+      handlers.onEnd();
     };
     try {
       rec.start();
     } catch (err) {
       throw new SpeechError('unknown', (err as Error).message);
     }
-    return { stop: () => rec.stop() };
+    return {
+      stop: () => {
+        userStopped = true;
+        rec.stop();
+      },
+    };
   },
 };
 
@@ -150,36 +177,80 @@ async function startNative(handlers: SpeechHandlers, lang: string): Promise<Spee
   if (perm !== 'granted') perm = (await NativeSpeech.requestPermissions()).speechRecognition;
   if (perm !== 'granted') throw new SpeechError('permission-denied');
 
+  // Android's recogniser stops after a second or two of silence. To let people pause mid-sentence,
+  // keep listening in rounds and join them, until the user taps stop, says "add it", or a whole
+  // round passes without speech.
   let ended = false;
+  let userStopped = false;
+  let committed = ''; // text from finished rounds
+  let current = ''; // text heard in this round
+  let heardThisRound = false;
+  const startedAt = Date.now();
+  const transcript = () => [committed, current].filter(Boolean).join(' ').trim();
+
   const finish = async () => {
     if (ended) return;
     ended = true;
     await NativeSpeech.removeAllListeners();
     handlers.onEnd();
   };
+
+  const endOfRound = () => {
+    if (ended) return;
+    committed = transcript();
+    current = '';
+    const keepGoing =
+      !userStopped && heardThisRound && !SAID_DONE.test(committed) && Date.now() - startedAt < MAX_LISTEN_MS;
+    if (keepGoing) startRound();
+    else void finish();
+  };
+
+  const startRound = () => {
+    heardThisRound = false;
+    NativeSpeech.start({ language: lang, partialResults: true, popup: false, maxResults: 1 })
+      .then((res) => {
+        if (res?.matches?.[0]) {
+          current = res.matches[0];
+          heardThisRound = true;
+          handlers.onTranscript(transcript());
+        }
+      })
+      .catch((err: Error) => {
+        const msg = String(err?.message ?? '').toLowerCase();
+        const noSpeech = msg.includes('match') || msg.includes('speech');
+        // Silence after the user already said something just means they're done.
+        if (!(noSpeech && committed)) {
+          handlers.onError(new SpeechError(noSpeech ? 'no-speech' : 'unknown', err?.message));
+        }
+        void finish();
+      });
+  };
+
   await NativeSpeech.addListener('partialResults', (data: { matches?: string[] }) => {
-    if (data.matches?.[0]) handlers.onTranscript(data.matches[0]);
+    if (data.matches?.[0]) {
+      current = data.matches[0];
+      heardThisRound = true;
+      handlers.onTranscript(transcript());
+    }
   });
   await NativeSpeech.addListener('listeningState', (data: { status: 'started' | 'stopped' }) => {
-    if (data.status === 'stopped') void finish();
+    if (data.status === 'stopped') endOfRound();
   });
 
-  NativeSpeech.start({ language: lang, partialResults: true, popup: false, maxResults: 1 })
-    .then((res) => {
-      if (res?.matches?.[0]) handlers.onTranscript(res.matches[0]);
-    })
-    .catch((err: Error) => {
-      const msg = String(err?.message ?? '').toLowerCase();
-      handlers.onError(new SpeechError(msg.includes('match') ? 'no-speech' : 'unknown', err?.message));
-      void finish();
-    });
+  startRound();
 
   return {
     stop: () => {
+      userStopped = true;
       void NativeSpeech.stop().finally(() => void finish());
     },
   };
 }
+
+/** "…add it" / "save it" / "that's it": the user finished, so stop listening. */
+const SAID_DONE = /\b(?:add it|save it|save (?:the |this )?task|add (?:the |this )?task|that'?s it|that'?s all|done adding)[\s.!]*$/i;
+/** Never listen for longer than this in one go. */
+const MAX_LISTEN_MS = 90_000;
 
 export function speechErrorMessage(code: SpeechErrorCode, support: SpeechSupport): string {
   switch (code) {
