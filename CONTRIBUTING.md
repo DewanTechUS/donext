@@ -23,6 +23,6 @@ Thanks for your interest! DoNext is open source under the [MIT License](LICENSE)
 
 The code is MIT-licensed, so you can modify it and use it in your own projects, including commercial ones, as long as you keep the copyright notice in `LICENSE`.
 
-The MIT License covers the **code only**. The **DoNext** and **DewanTech™** names, logos and slogan are trademarks and are **not** included. If you publish your own version, you **must** use your own name and logo. See the [Trademark Policy](TRADEMARKS.md), and follow the [Rebranding guide](docs/REBRANDING.md); it only takes a few minutes.
+The MIT License covers the **code only**. The **DoNext** name and logo are trademarks of Dewan Mahmud and are **not** included. If you publish your own version, you **must** use your own name and logo. See the [Trademark Policy](TRADEMARKS.md), and follow the [Rebranding guide](docs/REBRANDING.md); it only takes a few minutes.
 
 Pull requests to *this* repository are, of course, part of DoNext itself.

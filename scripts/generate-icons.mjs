@@ -3,7 +3,6 @@
  * Builds every app icon, splash screen and in-app logo from the source artwork in branding/.
  *
  *   branding/donext-logo.png     DoNext app logo (square, full-bleed navy background)
- *   branding/dewantech-logo.png  DewanTech company logo (square, black background)
  *
  * Outputs:
  *   client/public/icons/*   PWA icons, favicon, apple-touch-icon
@@ -19,7 +18,6 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const APP_LOGO = join(root, 'branding/donext-logo.png');
-const COMPANY_LOGO = join(root, 'branding/dewantech-logo.png');
 const NAVY = '#012360'; // background colour of the DoNext logo
 
 async function out(rel, pipeline) {
@@ -46,7 +44,6 @@ await out('client/public/icons/favicon-48.png', square(APP_LOGO, 48));
 
 // In-app logos (2x the largest display size for sharp rendering on high-density screens)
 await out('client/src/assets/donext-logo.png', square(APP_LOGO, 128));
-await out('client/src/assets/dewantech-logo.png', square(COMPANY_LOGO, 160));
 
 // Capacitor native icons and splash screens
 await out('client/assets/icon-only.png', square(APP_LOGO, 1024));

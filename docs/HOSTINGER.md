@@ -1,6 +1,6 @@
 # Deploying DoNext on Hostinger
 
-DoNext runs as a **Node.js Web App** in Hostinger's hPanel. One Node process serves both the website and the API, at an address such as `https://donext.dewantech.com`.
+DoNext runs as a **Node.js Web App** in Hostinger's hPanel. One Node process serves both the website and the API, at an address such as `https://donext.dewanmahmud.com`.
 
 > **Plan requirement:** Node.js apps are available on Hostinger **Business Web Hosting** and the **Cloud** plans (Startup, Professional, Enterprise, Enterprise Plus). The Premium and Single plans can't run DoNext; upgrade in hPanel, or use a Hostinger VPS (see the end of this guide).
 
@@ -14,7 +14,7 @@ You need:
    - Go to **Network Access → Add IP Address** and allow your Hostinger app to connect. Hostinger's shared/cloud servers don't have a fixed outgoing IP you control, so the simplest option is `0.0.0.0/0` (allow from anywhere). This is acceptable because the connection still needs your database username and strong password. Use a long, random database password.
    - Turn on **Backups** for the cluster. Paid tiers include them; on the free M0 tier, download a copy regularly instead.
 2. **Email sending (SMTP)** for password reset emails. Options:
-   - The email service that comes with your Hostinger plan, if you use Hostinger email for dewantech.com: `smtp.hostinger.com`, port `465`, secure.
+   - The email service that comes with your Hostinger plan, if you use Hostinger email for dewanmahmud.com: `smtp.hostinger.com`, port `465`, secure.
    - Amazon SES, Postmark, SendGrid and so on.
 3. **The GitHub repo**, `DewanTechUS/donext` (or your own fork).
 
@@ -22,7 +22,7 @@ You need:
 
 ## Step 1: Create the subdomain
 
-In hPanel, go to **Domains → Subdomains** and create `donext.dewantech.com`. You can also attach it directly when creating the app in step 2.
+In hPanel, go to **Domains → Subdomains** and create `donext.dewanmahmud.com`. You can also attach it directly when creating the app in step 2.
 
 ## Step 2: Create the Node.js app
 
@@ -53,15 +53,15 @@ Add these in the app's **Environment Variables** section. Never put them in GitH
 | `JWT_SECRET` | a new long random value (see below) |
 | `JWT_EXPIRES_IN` | `7d` |
 | `SERVE_CLIENT` | `true` |
-| `APP_URL` | `https://donext.dewantech.com` |
+| `APP_URL` | `https://donext.dewanmahmud.com` |
 | `TRUST_PROXY` | `1` |
-| `CORS_ORIGINS` | `https://donext.dewantech.com` |
+| `CORS_ORIGINS` | `https://donext.dewanmahmud.com` |
 | `SMTP_HOST` | e.g. `smtp.hostinger.com` |
 | `SMTP_PORT` | `465` |
 | `SMTP_SECURE` | `true` |
-| `SMTP_USER` | e.g. `no-reply@dewantech.com` (an email account you create in hPanel → Emails) |
+| `SMTP_USER` | e.g. `you@gmail.com` (an email account you create in hPanel → Emails) |
 | `SMTP_PASS` | that email account's password |
-| `MAIL_FROM` | `DoNext <no-reply@dewantech.com>` |
+| `MAIL_FROM` | `DoNext <you@gmail.com>` |
 | `MONGOMS_DISABLE_POSTINSTALL` | `1`. This skips downloading a test database that only the test suite needs, which makes builds faster. |
 
 Hostinger normally provides `PORT` itself, and DoNext uses it automatically. Don't set `PORT` unless Hostinger's docs or support tell you to.
@@ -83,22 +83,22 @@ Click **Deploy**. Hostinger installs the dependencies, runs the build and starts
   Connected to MongoDB
   DoNext API listening on http://localhost:<port>
   ```
-- In hPanel, make sure **SSL** is active for `donext.dewantech.com`. It's usually issued automatically.
+- In hPanel, make sure **SSL** is active for `donext.dewanmahmud.com`. It's usually issued automatically.
 
 From then on, every `git push` to `main` redeploys automatically.
 
 ## Step 5: Check that it works
 
-Open `https://donext.dewantech.com` and confirm:
-- [ ] `https://donext.dewantech.com/api/health` shows `{"ok":true,"db":"connected"}`.
+Open `https://donext.dewanmahmud.com` and confirm:
+- [ ] `https://donext.dewanmahmud.com/api/health` shows `{"ok":true,"db":"connected"}`.
 - [ ] You can sign up, add a task (typed and by voice), and see it after a refresh.
-- [ ] Opening `https://donext.dewantech.com/support` directly works.
+- [ ] Opening `https://donext.dewanmahmud.com/support` directly works.
 - [ ] **Forgot password?** sends you an email, and the link works.
 - [ ] On your phone, **Add to Home Screen** works, and the app opens offline with your tasks.
 
-## Step 6: Link it from dewantech.com
+## Step 6: Link it from dewanmahmud.com
 
-On your main website, add a menu item or button such as "DoNext — To-Do app" that links to `https://donext.dewantech.com`.
+On your main website, add a menu item or button such as "DoNext — To-Do app" that links to `https://donext.dewanmahmud.com`.
 
 ---
 

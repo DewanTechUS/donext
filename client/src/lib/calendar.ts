@@ -108,7 +108,7 @@ export function icsFile(e: CalendarEvent, now = new Date()): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//DewanTech//DoNext//EN',
+    'PRODID:-//Dewan Mahmud//DoNext//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',

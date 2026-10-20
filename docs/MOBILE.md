@@ -12,7 +12,7 @@ DoNext is packaged as native iOS and Android apps with **Capacitor 8**. The nati
 | --- | --- |
 | Android project (`client/android/`) | ✅ Created. Targets **API 36 (Android 16)**, as Google Play has required for new apps and updates since August 31, 2026. Minimum Android 7.0 (API 24). |
 | iOS project (`client/ios/`) | ✅ Created, using CocoaPods. Minimum iOS 15. |
-| App ID / bundle ID | ✅ `com.dewantech.donext`. It can still change until your first store release, but never after. |
+| App ID / bundle ID | ✅ `com.dewanmahmud.donext`. It can still change until your first store release, but never after. |
 | App name | ✅ DoNext |
 | App icons and splash screens | ✅ Generated from your DoNext logo for both platforms |
 | Microphone and speech permissions | ✅ iOS usage descriptions and Android `RECORD_AUDIO` added |
@@ -40,13 +40,13 @@ You also need:
 
 ```bash
 cd client
-cp .env.mobile.example .env.mobile      # then set VITE_API_URL=https://donext.dewantech.com
+cp .env.mobile.example .env.mobile      # then set VITE_API_URL=https://donext.dewanmahmud.com
 ```
 
 On the server, add the native app origins to `CORS_ORIGINS`:
 
 ```ini
-CORS_ORIGINS=https://donext.dewantech.com,capacitor://localhost,https://localhost
+CORS_ORIGINS=https://donext.dewanmahmud.com,capacitor://localhost,https://localhost
 ```
 
 - `capacitor://localhost` is the iOS app's origin.
@@ -112,7 +112,7 @@ The voice button uses [`@capacitor-community/speech-recognition`](https://github
 
 ### iOS: archive and upload
 
-1. 🔑 In the [Apple Developer portal](https://developer.apple.com/account), register the App ID `com.dewantech.donext`.
+1. 🔑 In the [Apple Developer portal](https://developer.apple.com/account), register the App ID `com.dewanmahmud.donext`.
 2. In Xcode, go to **App target → General** and set the *Version* (1.0.0) and *Build* number. The build number must increase with every upload.
 3. Under **Signing & Capabilities**, choose your 🔑 team and keep *Automatically manage signing* on.
 4. Choose **Product → Archive**, then in **Organizer** choose **Distribute App → App Store Connect → Upload**.

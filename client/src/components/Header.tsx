@@ -4,8 +4,8 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TasksContext';
 import { useDialog } from '../hooks/useDialog';
-import { APP_NAME, COMPANY_NAME, COMPANY_SITE_URL, COPYRIGHT, SLOGAN } from '../lib/brand';
-import { AppWordmark, CompanyLogo } from './Brand';
+import { APP_NAME, AUTHOR_SITE_LABEL, AUTHOR_SITE_URL } from '../lib/brand';
+import { AppWordmark, AuthorLine } from './Brand';
 import {
   ChevronRightIcon,
   CloseIcon,
@@ -231,9 +231,9 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
             <MenuLink to="/privacy" label="Privacy Policy" Icon={ShieldIcon} />
             <MenuLink to="/terms" label="Terms of Service" Icon={FileTextIcon} />
             <li>
-              <a href={COMPANY_SITE_URL} target="_blank" rel="noopener noreferrer" className={rowClass}>
+              <a href={AUTHOR_SITE_URL} target="_blank" rel="noopener noreferrer" className={rowClass}>
                 <GlobeIcon className="shrink-0 text-slate-400" width={18} height={18} />
-                <span className="flex-1">DewanTech.com</span>
+                <span className="flex-1">{AUTHOR_SITE_LABEL}</span>
                 <ExternalIcon className="text-slate-300 dark:text-slate-600" width={16} height={16} />
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
@@ -253,11 +253,7 @@ function MobileMenu({ links, onClose }: { links: NavItem[]; onClose: () => void 
           </MenuGroup>
 
           <div className="mt-auto pt-2 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-            <a href={COMPANY_SITE_URL} rel="noopener" className="mb-1 inline-block rounded" aria-label={`${COMPANY_NAME} website`}>
-              <CompanyLogo size={24} />
-            </a>
-            <p>{COPYRIGHT}</p>
-            <p className="italic">{SLOGAN}</p>
+            <AuthorLine />
           </div>
         </div>
       </div>

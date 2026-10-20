@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { IS_DEMO, IS_LOCAL } from '../lib/api';
-import { COMPANY_LEGAL_NAME, LEGAL, LEGAL_IS_DRAFT, REPO_URL, type LegalField } from '../lib/brand';
+import { AUTHOR_NAME, LEGAL, LEGAL_IS_DRAFT, REPO_URL, type LegalField } from '../lib/brand';
 
 /**
  * Highlighted placeholder. Business details come from LEGAL in lib/brand.ts — fill them in there.
@@ -40,14 +40,14 @@ function DemoLegal({ kind }: { kind: 'privacy' | 'terms' }) {
     <article className="prose-page mx-auto max-w-3xl">
       <h1 className="mb-1 text-3xl font-bold tracking-tight">{kind === 'privacy' ? 'Privacy Policy' : 'Terms of Use'}</h1>
       <p className="text-sm">
-        For the DoNext app for Android and the DoNext live demo · {COMPANY_LEGAL_NAME} · Effective October 20, 2026
+        For the DoNext app for Android and the DoNext live demo · {AUTHOR_NAME} · Effective October 20, 2026
       </p>
 
       {kind === 'privacy' ? (
         <>
           <h2>The short version</h2>
           <p>
-            DoNext keeps your tasks on your own device. We (DewanTech) don't collect, receive, sell or share your personal data. There is no
+            DoNext keeps your tasks on your own device. We (Dewan Mahmud, the developer) don't collect, receive, sell or share your personal data. There is no
             account to create, and the app has no ads, analytics or tracking.
           </p>
           <h2>What is stored, and where</h2>
@@ -56,7 +56,7 @@ function DemoLegal({ kind }: { kind: 'privacy' | 'terms' }) {
               Your name (if you enter one), tasks, sub-items, due dates, reminders and settings are saved only on your device, in the app's
               private storage (or, for the live demo, in your browser's storage).
             </li>
-            <li>Nothing is uploaded to DewanTech or to any server we run.</li>
+            <li>Nothing is uploaded to us or to any server we run.</li>
             <li>
               To delete everything, use <strong>Account → Erase all data</strong>, or uninstall the app (in the demo: clear this site's
               data in your browser).
@@ -102,23 +102,22 @@ function DemoLegal({ kind }: { kind: 'privacy' | 'terms' }) {
           </p>
           <h2>Your data is your responsibility</h2>
           <p>
-            DoNext saves your tasks <strong>only on your own device</strong>. DewanTech never receives a copy, so we{' '}
+            DoNext saves your tasks <strong>only on your own device</strong>. We never receive a copy, so we{' '}
             <strong>cannot see, back up, restore or recover</strong> your tasks. You alone are responsible for keeping them and for
             keeping your own copy of anything important. Your tasks are permanently lost if you uninstall the app, erase or clear its
-            data, reset, lose or replace your device, or clear your browser (for the live demo). DewanTech is not responsible for any lost
+            data, reset, lose or replace your device, or clear your browser (for the live demo). We are not responsible for any lost
             data.
           </p>
           <h2>Acceptable use</h2>
           <p>Please don't use DoNext to break the law or to attack, overload or misuse it.</p>
           <h2>Open-source code and our name</h2>
           <p>
-            DoNext's code is open source under the <a href={`${REPO_URL}/blob/main/LICENSE`}>MIT License</a>. The DoNext and
-            DewanTech™ names and logos are not covered by that license; see the{' '}
+            DoNext's code is open source under the <a href={`${REPO_URL}/blob/main/LICENSE`}>MIT License</a>. The DoNext name and logo are not covered by that license; see the{' '}
             <a href={`${REPO_URL}/blob/main/TRADEMARKS.md`}>Trademark Policy</a>.
           </p>
           <h2>Limitation of liability</h2>
           <p>
-            To the fullest extent permitted by law, {COMPANY_LEGAL_NAME} is not liable for any loss arising from your use of this free
+            To the fullest extent permitted by law, {AUTHOR_NAME} is not liable for any loss arising from your use of this free
             demo.
           </p>
           <h2>Contact</h2>
@@ -147,13 +146,13 @@ export function PrivacyPage() {
       {IS_DEMO && (
         <div role="note" className="mb-6 rounded-xl border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
           <strong>About this live demo:</strong> it runs entirely in your browser. Accounts and tasks you create here are stored only in
-          this browser’s storage and are never sent to DewanTech or any server. Clearing your browser data deletes them. The policy below
+          this browser’s storage and are never sent to us or any server. Clearing your browser data deletes them. The policy below
           describes the full version, which uses a server.
         </div>
       )}
 
       <p>
-        This policy explains how {COMPANY_LEGAL_NAME} (“DewanTech”, “we”, “us”){address ? `, located at ${address},` : ""}
+        This policy explains how {AUTHOR_NAME} (“we”, “us”){address ? `, located at ${address},` : ""}
         collects, uses and protects information when you use the DoNext web app and mobile apps (the “App”).
       </p>
 
@@ -180,7 +179,7 @@ export function PrivacyPage() {
 
       <h2>Voice input and microphone</h2>
       <p>
-        The microphone is used only when you tap the microphone button, to convert your speech into task text. DewanTech does not
+        The microphone is used only when you tap the microphone button, to convert your speech into task text. We do not
         record, receive or store audio — only the text you choose to save. Speech recognition is performed by your browser or
         device's speech service: for example, Google Chrome may send audio to Google, and Apple devices may send audio to Apple, to
         perform recognition under their own privacy policies. You can deny or revoke microphone permission at any time in your
@@ -270,7 +269,7 @@ export function PrivacyPage() {
 
       <h2>Contact</h2>
       <p>
-        {COMPANY_LEGAL_NAME}{address ? `, ${address}` : ""} · Email: <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" />
+        {AUTHOR_NAME}{address ? `, ${address}` : ""} · Email: <V k="privacyEmail" label="PRIVACY CONTACT EMAIL" />
       </p>
     </article>
   );
@@ -287,7 +286,7 @@ export function TermsPage() {
       <DraftNotice />
 
       <p>
-        These Terms govern your use of DoNext (the “App”), provided by {COMPANY_LEGAL_NAME} (“DewanTech”). By creating
+        These Terms govern your use of DoNext (the “App”), provided by {AUTHOR_NAME} (“we”, “us”). By creating
         an account or using the App you agree to these Terms and our{' '}
         <Link to="/privacy" className="underline">
           Privacy Policy
@@ -303,14 +302,13 @@ export function TermsPage() {
 
       <h2>Your content</h2>
       <p>
-        You own the tasks and other content you create. You grant DewanTech a limited licence to store, process and transmit that
+        You own the tasks and other content you create. You grant us a limited licence to store, process and transmit that
         content solely to provide the App to you.
       </p>
 
       <h2>Trademarks and open-source code</h2>
       <p>
-        The App’s source code is available under the MIT License. That licence covers the code only. “DoNext”, “DewanTech™”, their
-        logos and the slogan “Technology Built with Purpose.” are trademarks of Dewan Global LLC and may not be used to name, brand or
+        The App’s source code is available under the MIT License. That licence covers the code only. “DoNext” and the DoNext logo are trademarks of Dewan Mahmud and may not be used to name, brand or
         promote any other product or service without written permission. See the{' '}
         <a href={`${REPO_URL}/blob/main/TRADEMARKS.md`} rel="noopener" className="underline">
           Trademark Policy
@@ -344,7 +342,7 @@ export function TermsPage() {
 
       <h2>Provided “as is”</h2>
       <p>
-        Like all applications and services provided by DewanTech™, the App is offered <strong>“AS IS” and “AS AVAILABLE”, without
+        The App is offered <strong>“AS IS” and “AS AVAILABLE”, without
         warranties of any kind</strong>, whether express or implied, including any warranties of merchantability, fitness for a
         particular purpose, accuracy, reliability or non-infringement. We do not promise that the App will always be available, will
         be free of errors, or will meet your needs.
@@ -357,19 +355,19 @@ export function TermsPage() {
         <Link to="/account" className="underline">
           Account
         </Link>{' '}
-        page. <strong>DewanTech is not responsible for any loss, corruption or deletion of your data</strong>, for any reason —
+        page. <strong>We are not responsible for any loss, corruption or deletion of your data</strong>, for any reason —
         including service outages, software errors, sync conflicts, problems with your device or browser, or the deletion of your
         account.
       </p>
 
       <h2>Limitation of liability</h2>
       <p>
-        To the maximum extent permitted by law, DewanTech and its owners, employees and suppliers will not be liable for any direct,
+        To the maximum extent permitted by law, we and our suppliers will not be liable for any direct,
         indirect, incidental, special, consequential or punitive damages, or for any loss of data, use, profits, revenue or goodwill,
         arising out of or related to your use of (or inability to use) the App, even if we have been told such damages are possible.
       </p>
       <p>
-        Our total liability for any claim relating to the App is limited to the amount you paid DewanTech for the App in the 12 months
+        Our total liability for any claim relating to the App is limited to the amount you paid us for the App in the 12 months
         before the claim. While the App is free, that amount is zero. Some places do not allow certain warranties or liabilities to be
         excluded or limited; where that applies, our liability is limited to the smallest amount the law allows.
       </p>
@@ -382,7 +380,7 @@ export function TermsPage() {
 
       <h2>Contact</h2>
       <p>
-        {COMPANY_LEGAL_NAME}{address ? `, ${address}` : ""} · Email: <V k="supportEmail" label="SUPPORT CONTACT EMAIL" />
+        {AUTHOR_NAME}{address ? `, ${address}` : ""} · Email: <V k="supportEmail" label="SUPPORT CONTACT EMAIL" />
       </p>
     </article>
   );

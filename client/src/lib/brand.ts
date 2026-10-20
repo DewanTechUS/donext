@@ -1,12 +1,12 @@
-/** Product and company branding, in one place. */
+/** Product branding and its author, in one place. */
 export const APP_NAME = 'DoNext';
-export const COMPANY_NAME = 'DewanTech™';
-export const COMPANY_LEGAL_NAME = 'Dewan Global LLC DBA DewanTech™';
-export const SLOGAN = 'Technology Built with Purpose.';
-export const COPYRIGHT = `© ${new Date().getFullYear()} ${COMPANY_LEGAL_NAME}`;
+/** The developer who publishes DoNext (credits, policies and the store listing). */
+export const AUTHOR_NAME = 'Dewan Mahmud';
+export const COPYRIGHT = `© ${new Date().getFullYear()} ${AUTHOR_NAME}`;
 
-/** Confirm this is your company website. */
-export const COMPANY_SITE_URL = 'https://dewantech.com';
+/** The author's website. */
+export const AUTHOR_SITE_URL = 'https://dewanmahmud.com';
+export const AUTHOR_SITE_LABEL = 'DewanMahmud.com';
 
 /** Open-source repository (shown in the demo banner and footer). */
 export const REPO_URL = 'https://github.com/DewanTechUS/donext';
@@ -22,9 +22,9 @@ export const LEGAL = {
   effectiveDate: '', // the day you go live, e.g. 'November 1, 2026'
   lastUpdated: '', // same as effectiveDate at first; change it whenever you edit the policies
   businessAddress: '', // OPTIONAL — business address, or leave empty (individuals don't need to publish one)
-  supportEmail: 'support@dewantech.com',
-  infoEmail: 'info@dewantech.com', // general information and licensing
-  privacyEmail: 'support@dewantech.com', // use a dedicated privacy@ address here if you create one
+  supportEmail: 'dewan.swe@gmail.com',
+  infoEmail: 'dewan.swe@gmail.com', // general information and licensing
+  privacyEmail: 'dewan.swe@gmail.com',
   hostingProvider: '', // where the API runs, e.g. 'Render' or 'DigitalOcean'
   databaseProvider: 'MongoDB Atlas',
   dataRegion: '', // shown in Atlas → your cluster, e.g. 'United States (AWS us-east-1)'
@@ -33,8 +33,8 @@ export const LEGAL = {
   logRetention: '30 days', // suggested
   backupRetention: '30 days', // suggested
   minimumAge: '13', // suggested (U.S. COPPA). Use '16' if you target the EU.
-  governingLaw: '', // the state your LLC is registered in, e.g. 'the State of New York, USA'
-  disputeVenue: '', // e.g. 'the state and federal courts located in New York County, New York'
+  governingLaw: '', // the state you live in, e.g. 'the State of Georgia, USA'
+  disputeVenue: '', // e.g. 'the state and federal courts located in Fulton County, Georgia'
   pricing:
     'DoNext is currently free to use. If we introduce paid features, we will tell you in advance and you can choose whether to use them.', // suggested
   finalized: false,

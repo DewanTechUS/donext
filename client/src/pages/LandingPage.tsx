@@ -2,12 +2,12 @@ import { useState, type ComponentType, type FormEvent, type SVGProps } from 'rea
 import { Link, useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { Alert } from '../components/Alert';
-import { AppLogo, CompanyLogo } from '../components/Brand';
+import { AppLogo, AuthorLine } from '../components/Brand';
 import { CheckIcon, CloudIcon, MicIcon, ShieldIcon } from '../components/Icons';
 import { Spinner } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
 import { IS_DEMO, IS_LOCAL } from '../lib/api';
-import { APP_NAME, COPYRIGHT, REPO_URL, SLOGAN } from '../lib/brand';
+import { APP_NAME, REPO_URL } from '../lib/brand';
 
 /** Inside the iOS/Android app, browser-only tips (Add to Home Screen) don't apply. */
 const isNativeApp = Capacitor.isNativePlatform();
@@ -104,9 +104,7 @@ function LocalWelcome() {
       </form>
 
       <footer className="mt-10 flex flex-col items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-        <CompanyLogo size={28} />
-        <p>{COPYRIGHT}</p>
-        <p className="italic">{SLOGAN}</p>
+        <AuthorLine />
       </footer>
     </div>
   );
@@ -226,9 +224,7 @@ function WebLanding() {
       </section>
 
       <footer className="flex flex-col items-center gap-1.5 border-t border-slate-200 pt-6 text-center text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 lg:hidden">
-        <CompanyLogo size={28} />
-        <p>{COPYRIGHT}</p>
-        <p className="italic">{SLOGAN}</p>
+        <AuthorLine />
       </footer>
     </div>
   );

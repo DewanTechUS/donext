@@ -1,4 +1,4 @@
-package com.dewantech.donext;
+package com.dewanmahmud.donext;
 
 import com.getcapacitor.BridgeActivity;
 

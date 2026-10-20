@@ -8,7 +8,7 @@ The Play version is the **local app**: tasks are stored on the phone, with no se
 
 | Item | Where |
 | --- | --- |
-| Android project (package `com.dewantech.donext`, target API 36, min API 24) | `client/android/` |
+| Android project (package `com.dewanmahmud.donext`, target API 36, min API 24) | `client/android/` |
 | Voice input, hands-free commands, phone notifications with a chime, read-aloud | the app |
 | Store screenshots, feature graphic, 512 px icon | `docs/play-store/` |
 | Privacy Policy (covers the app) | <https://dewantechus.github.io/donext/privacy> |
@@ -123,7 +123,7 @@ PRIVATE BY DESIGN
 
 Dark mode, large touch targets and screen-reader support included.
 
-DoNext is free and open source (MIT). Built by Dewan Mahmud · DewanTech™ — Technology Built with Purpose.
+DoNext is free and open source (MIT). Made by Dewan Mahmud.
 ```
 
 **Graphics** (from `docs/play-store/`):

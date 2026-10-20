@@ -13,8 +13,8 @@ Choose **one** of these layouts:
 
 | Layout | Example URL | Best for |
 | --- | --- | --- |
-| **A. Subdomain, single server** (recommended) | `https://donext.dewantech.com` | Simplest setup: one Node process serves the API and the app, everything is same-origin, and you don't need to configure CORS |
-| **B. Sub-path on your existing site + separate API** | `https://dewantech.com/todo/` with the API at `https://api.dewantech.com` | Your main site is on static or shared hosting and you want the app under its domain |
+| **A. Subdomain, single server** (recommended) | `https://donext.dewanmahmud.com` | Simplest setup: one Node process serves the API and the app, everything is same-origin, and you don't need to configure CORS |
+| **B. Sub-path on your existing site + separate API** | `https://dewanmahmud.com/todo/` with the API at `https://api.dewanmahmud.com` | Your main site is on static or shared hosting and you want the app under its domain |
 
 HTTPS is **required**. Service workers (offline support and installability), the microphone, and secure sign-in all depend on it.
 
@@ -24,7 +24,7 @@ HTTPS is **required**. Service workers (offline support and installability), the
 
 ### 1. DNS
 
-Create an `A` record (or a `CNAME`, if your platform gives you one) for `donext.dewantech.com` that points at your host. *You do this in your domain registrar's or DNS provider's dashboard, using your own account.*
+Create an `A` record (or a `CNAME`, if your platform gives you one) for `donext.dewanmahmud.com` that points at your host. *You do this in your domain registrar's or DNS provider's dashboard, using your own account.*
 
 ### 2. Build and configure
 
@@ -45,7 +45,7 @@ JWT_SECRET=<64+ random hex chars>
 SERVE_CLIENT=true
 TRUST_PROXY=1                            # behind Nginx / a PaaS load balancer
 CORS_ORIGINS=capacitor://localhost,https://localhost   # only needed for the mobile apps
-APP_URL=https://donext.dewantech.com     # used in password reset emails
+APP_URL=https://donext.dewanmahmud.com     # used in password reset emails
 # SMTP settings: see "Emails" below (free with Gmail)
 ```
 
@@ -57,7 +57,7 @@ Start it with `npm start`, which runs `node server/dist/index.js`.
 - **Start command:** `npm start`
 - **Environment variables:** set the values above in the dashboard, not in a committed file.
 - **Health check path:** `/api/health`
-- **Custom domain:** add `donext.dewantech.com` in the platform's dashboard; the platform issues the TLS certificate.
+- **Custom domain:** add `donext.dewanmahmud.com` in the platform's dashboard; the platform issues the TLS certificate.
 
 ### 3b. On your own VPS (Ubuntu + Nginx)
 
@@ -83,11 +83,11 @@ WantedBy=multi-user.target
 sudo systemctl enable --now donext
 ```
 
-Nginx reverse proxy, in `/etc/nginx/sites-available/donext.dewantech.com`:
+Nginx reverse proxy, in `/etc/nginx/sites-available/donext.dewanmahmud.com`:
 
 ```nginx
 server {
-    server_name donext.dewantech.com;
+    server_name donext.dewanmahmud.com;
     location / {
         proxy_pass http://127.0.0.1:4000;
         proxy_set_header Host $host;
@@ -100,7 +100,7 @@ server {
 Then get a free TLS certificate:
 
 ```bash
-sudo certbot --nginx -d donext.dewantech.com
+sudo certbot --nginx -d donext.dewanmahmud.com
 ```
 
 ### 3c. With Docker
@@ -112,20 +112,20 @@ docker run -d --restart unless-stopped -p 4000:4000 --env-file server/.env donex
 
 The image sets `SERVE_CLIENT=true` and includes a health check. Put Nginx or your platform's TLS termination in front of it, as in 3b.
 
-### 4. Link it from your DewanTech website
+### 4. Link it from your website
 
-Add a menu item or button on dewantech.com that links to `https://donext.dewantech.com`.
+Add a menu item or button on dewanmahmud.com that links to `https://donext.dewanmahmud.com`.
 
 ---
 
-## B. Sub-path on your existing website (`dewantech.com/todo/`)
+## B. Sub-path on your existing website (`dewanmahmud.com/todo/`)
 
 ### 1. Deploy the API
 
-Deploy the API on its own subdomain, such as `api.dewantech.com`, following section A with `SERVE_CLIENT=false` and:
+Deploy the API on its own subdomain, such as `api.dewanmahmud.com`, following section A with `SERVE_CLIENT=false` and:
 
 ```ini
-CORS_ORIGINS=https://dewantech.com,https://www.dewantech.com,capacitor://localhost,https://localhost
+CORS_ORIGINS=https://dewanmahmud.com,https://www.dewanmahmud.com,capacitor://localhost,https://localhost
 ```
 
 ### 2. Build the web app for the sub-path
@@ -133,7 +133,7 @@ CORS_ORIGINS=https://dewantech.com,https://www.dewantech.com,capacitor://localho
 ```bash
 # client/.env.production
 VITE_BASE_PATH=/todo/
-VITE_API_URL=https://api.dewantech.com
+VITE_API_URL=https://api.dewanmahmud.com
 ```
 
 ```bash
@@ -183,7 +183,7 @@ location /todo/assets/ { add_header Cache-Control "public, max-age=31536000, imm
 In layout B, your static host serves the app, so Express's Helmet headers don't apply to it. Add a CSP on your host that allows the API origin:
 
 ```
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.dewantech.com; frame-ancestors 'none'; object-src 'none'
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.dewanmahmud.com; frame-ancestors 'none'; object-src 'none'
 ```
 
 ---
@@ -215,27 +215,27 @@ A regular Gmail account can send a few hundred emails a day for free, which is p
    ```
 4. Restart the server and invite yourself (another address) to a list. The app should say **"Invitation emailed to …"**.
 
-Gmail sends from your Gmail address. To send from a dewantech.com address, use one of the providers below. Brevo and Resend also have free plans.
+Gmail sends from your Gmail address. To send from a dewanmahmud.com address, use one of the providers below. Brevo and Resend also have free plans.
 
 ### Other providers
 
 - **Amazon SES:** very cheap, requires verifying your domain.
 - **Postmark** or **SendGrid:** quick to set up, with free or low-cost tiers.
-- **Google Workspace / Microsoft 365:** if you already use them for dewantech.com email.
+- **Google Workspace / Microsoft 365:** if you already use them for dewanmahmud.com email.
 
 Add these to the server's environment:
 
 ```ini
-APP_URL=https://donext.dewantech.com          # where the web app lives (include a sub-path such as /todo if you use one)
+APP_URL=https://donext.dewanmahmud.com          # where the web app lives (include a sub-path such as /todo if you use one)
 SMTP_HOST=smtp.your-provider.com
 SMTP_PORT=587
 SMTP_SECURE=false                             # true for port 465
 SMTP_USER=your-smtp-username
 SMTP_PASS=your-smtp-password
-MAIL_FROM=DoNext <no-reply@dewantech.com>     # a sender address your provider has verified
+MAIL_FROM=DoNext <you@gmail.com>     # a sender address your provider has verified
 ```
 
-To improve delivery, add the SPF and DKIM DNS records your provider gives you for dewantech.com.
+To improve delivery, add the SPF and DKIM DNS records your provider gives you for dewanmahmud.com.
 
 - **Without `SMTP_HOST`** (development), reset emails are printed in the server log, so you can copy the link from there.
 - **In production without SMTP**, the server logs a warning at startup, and users won't receive reset emails.

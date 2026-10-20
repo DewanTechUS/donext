@@ -1,10 +1,10 @@
 # DoNext
 
-**The to-do list you can talk to.** DoNext is a mobile-friendly, offline-first, open-source task app by DewanTech™. It has voice input, shared lists and offline sync, and is packaged for iOS and Android.
+**The to-do list you can talk to.** DoNext is a mobile-friendly, offline-first, open-source task app by Dewan Mahmud. It has voice input, shared lists and offline sync, and is packaged for iOS and Android.
 
 **▶ [Try the live demo](https://dewantechus.github.io/donext/)**: no sign-up, nothing to install. Tap **"Try it instantly"**.
 
-Built by **[Dewan Mahmud](https://dewanmahmud.com)** · DewanTech™: *Technology Built with Purpose.*
+Built by **[Dewan Mahmud](https://dewanmahmud.com)**
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Dewan%20Mahmud-0a66c2?logo=linkedin)](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)
@@ -122,7 +122,7 @@ dt_to_do/
 ├─ .github/workflows/      CI: test, build and deploy the live demo to GitHub Pages
 ├─ docs/                   deployment, mobile, rebranding guides; README screenshots
 ├─ Dockerfile              single-container production image
-├─ branding/              source logos: donext-logo.png (app), dewantech-logo.png (company)
+├─ branding/              source logo: donext-logo.png (app icon)
 ├─ scripts/generate-icons.mjs   builds all icons, splash screens and in-app logos from branding/
 ├─ server/
 │  ├─ src/
@@ -280,7 +280,7 @@ The first server test run downloads a MongoDB binary of about 70 MB. On Windows,
 | `TRUST_PROXY` | no | Number of reverse proxies in front of Express (needed for correct rate limiting behind Nginx or a PaaS) |
 | `APP_URL` | production | Public URL of the web app, including any sub-path. Used in password reset links |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` | production | Outgoing email for password resets. If `SMTP_HOST` is empty, emails are printed in the server log instead (development only) |
-| `MAIL_FROM` | no | Sender shown on emails (default `DoNext <no-reply@dewantech.com>`) |
+| `MAIL_FROM` | no | Sender shown on emails (default `DoNext <you@gmail.com>`) |
 | `NODE_ENV` | no | `production` in production |
 
 **Client** (`client/.env`, `client/.env.mobile`; templates: [client/.env.example](client/.env.example), [client/.env.mobile.example](client/.env.mobile.example)). These values are embedded in public JavaScript, so never put secrets here.
@@ -335,35 +335,33 @@ Everything you need to fill in lives in one file: [client/src/lib/brand.ts](clie
 
 - [ ] **`LEGAL`** in brand.ts: support and privacy email, business address, dates, hosting/email providers, data region, retention periods, minimum age, governing law and pricing. Empty values show as highlighted placeholders on the Privacy, Terms and Support pages.
 - [ ] Read the Privacy Policy and Terms yourself to check they're accurate, then set `finalized: true` in brand.ts. The "Draft" banner disappears automatically. A lawyer review is a good idea once you can afford one, but the stores don't require it.
-- [ ] `COMPANY_SITE_URL` in brand.ts.
-- [ ] [LICENSE](LICENSE): replace `[CONTACT EMAIL]`.
+- [x] `AUTHOR_NAME` and `AUTHOR_SITE_URL` in brand.ts (Dewan Mahmud, dewanmahmud.com).
 - [ ] Server: set `APP_URL` and SMTP settings so password reset emails are delivered.
-- [ ] [client/capacitor.config.ts](client/capacitor.config.ts): `appId` (permanent after the first store release) and `appName`.
-- [x] Icons and splash screens are generated from your logos in `branding/`. To change them, replace those files (square, 1024 px or larger) and run `npm run icons`.
+- [x] [client/capacitor.config.ts](client/capacitor.config.ts): `appId` is `com.dewanmahmud.donext` (permanent after the first store release).
+- [x] Icons and splash screens are generated from the logo in `branding/`. To change them, replace those files (square, 1024 px or larger) and run `npm run icons`.
 - [ ] `server/.env`: a real `JWT_SECRET`, production `MONGODB_URI`, and `CORS_ORIGINS`.
 
 ## About the author
 
-DoNext was designed and built by **Dewan Mahmud**, founder of **DewanTech™** (Dewan Global LLC): *Technology Built with Purpose.*
+DoNext was designed and built by **Dewan Mahmud**, a full-stack software engineer.
 
 - 💼 LinkedIn: [linkedin.com/in/dewan-mahmud-a579a0265](https://www.linkedin.com/in/dewan-mahmud-a579a0265/)
 - 🌐 Portfolio: [dewanmahmud.com](https://dewanmahmud.com)
-- 🏢 Company: [dewantech.com](https://dewantech.com)
 - ✉️ Email: [dewan.swe@gmail.com](mailto:dewan.swe@gmail.com)
 
 Feedback, ideas and opportunities are welcome.
 
 ## License
 
-**MIT** © 2026 Dewan Global LLC DBA DewanTech™. See [LICENSE](LICENSE).
+**MIT** © 2026 Dewan Mahmud. See [LICENSE](LICENSE).
 
 You're free to use, copy, modify and share this code, including in your own projects, as long as you keep the copyright notice. Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Name and brand: not included in the MIT License
 
-**DoNext**, **DewanTech™**, their logos and the slogan "Technology Built with Purpose." are trademarks of Dewan Global LLC and are **not** licensed for reuse.
+The **DoNext** name and logo are trademarks of Dewan Mahmud and are **not** licensed for reuse.
 
 - ✅ You may build and publish your own app from this code, **under your own name and logo**.
-- ❌ You may not use the DoNext or DewanTech™ names, logos or branding for your version, or suggest it's made or endorsed by DewanTech™.
+- ❌ You may not use the DoNext name, logo or branding for your version, or suggest it's the official DoNext.
 
 See the [Trademark Policy](TRADEMARKS.md), and the [Rebranding guide](docs/REBRANDING.md) for switching to your own brand in a few minutes.

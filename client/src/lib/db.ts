@@ -9,6 +9,7 @@ interface TodoDB extends DBSchema {
 }
 
 /** Each account gets its own database so tasks never leak between users on a shared device. */
+// Historical name, kept so existing users keep their offline tasks. Never shown to users.
 export const dbName = (userId: string) => `dewantech-todo-${userId}`;
 
 export class LocalStore {

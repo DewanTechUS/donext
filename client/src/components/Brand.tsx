@@ -1,6 +1,5 @@
-import companyLogo from '../assets/dewantech-logo.png';
 import appLogo from '../assets/donext-logo.png';
-import { APP_NAME, COMPANY_NAME, COMPANY_SITE_URL, COPYRIGHT, SLOGAN } from '../lib/brand';
+import { AUTHOR_NAME, AUTHOR_SITE_URL } from '../lib/brand';
 
 /** DoNext app icon. Decorative by default; pass `alt` when it is the only label. */
 export function AppLogo({ size = 36, alt = '' }: { size?: number; alt?: string }) {
@@ -28,48 +27,14 @@ export function AppWordmark({ size = 36 }: { size?: number }) {
   );
 }
 
-export function CompanyLogo({ size = 40 }: { size?: number }) {
+/** Copyright line with a link to the author's website. */
+export function AuthorLine({ className = '' }: { className?: string }) {
   return (
-    <img
-      src={companyLogo}
-      width={size}
-      height={size}
-      alt=""
-      className="shrink-0 rounded-xl ring-1 ring-slate-200 dark:ring-slate-700"
-      draggable={false}
-    />
-  );
-}
-
-/** One-line company credit for footers: small logo, copyright, and the slogan on wide screens. */
-export function CompanyLine({ className = '' }: { className?: string }) {
-  return (
-    <p className={`flex min-w-0 items-center gap-2 ${className}`}>
-      <a href={COMPANY_SITE_URL} rel="noopener" className="shrink-0 rounded-md" aria-label={`${COMPANY_NAME} website`}>
-        <img src={companyLogo} width={20} height={20} alt="" className="rounded" draggable={false} />
+    <p className={`truncate ${className}`}>
+      © {new Date().getFullYear()}{' '}
+      <a href={AUTHOR_SITE_URL} rel="noopener" className="rounded underline-offset-2 hover:underline">
+        {AUTHOR_NAME}
       </a>
-      <span className="truncate">
-        {COPYRIGHT}
-        <span className="hidden italic xl:inline"> · {SLOGAN}</span>
-      </span>
     </p>
-  );
-}
-
-/** Company credit block: DewanTech logo, name, slogan and copyright. */
-export function CompanyCredit({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className={`flex items-center gap-3 ${compact ? '' : 'text-left'}`}>
-      <a href={COMPANY_SITE_URL} rel="noopener" className="rounded-xl" aria-label={`${COMPANY_NAME} website`}>
-        <CompanyLogo size={compact ? 32 : 44} />
-      </a>
-      <div className="min-w-0 leading-tight">
-        <p className={`font-semibold text-slate-800 dark:text-slate-100 ${compact ? 'text-sm' : ''}`}>
-          {APP_NAME} <span className="font-normal text-slate-500 dark:text-slate-400">by</span> {COMPANY_NAME}
-        </p>
-        <p className={`italic text-slate-500 dark:text-slate-400 ${compact ? 'text-xs' : 'text-sm'}`}>{SLOGAN}</p>
-        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{COPYRIGHT}</p>
-      </div>
-    </div>
   );
 }

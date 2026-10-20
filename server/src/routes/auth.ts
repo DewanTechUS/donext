@@ -22,7 +22,7 @@ import { User, toPublicUser } from '../models/User.js';
 
 const BCRYPT_ROUNDS = 12;
 // Compared against when the email doesn't exist so response timing doesn't reveal registered emails.
-const DUMMY_HASH = bcrypt.hashSync('dewantech-timing-equaliser', BCRYPT_ROUNDS);
+const DUMMY_HASH = bcrypt.hashSync('donext-timing-equaliser', BCRYPT_ROUNDS);
 const RESET_MINUTES = 60;
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');
 

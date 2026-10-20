@@ -36,7 +36,7 @@ const envSchema = z.object({
     .transform((v) => v === 'true'),
   SMTP_USER: z.string().default(''),
   SMTP_PASS: z.string().default(''),
-  MAIL_FROM: z.string().default('DoNext <no-reply@dewantech.com>'),
+  MAIL_FROM: z.string().default('DoNext <no-reply@example.com>'),
 });
 
 export type Config = z.infer<typeof envSchema>;

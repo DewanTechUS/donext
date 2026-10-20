@@ -5,7 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Built around the DewanTech blue (#006fef) and the DoNext navy (#012360).
+        // Built around the DoNext blue (#006fef) and navy (#012360).
         brand: {
           50: '#eef6ff',
           100: '#d9eaff',

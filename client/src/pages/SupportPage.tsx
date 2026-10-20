@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Link } from 'react-router-dom';
 import { IS_LOCAL } from '../lib/api';
-import { APP_NAME, COMPANY_LEGAL_NAME, LEGAL } from '../lib/brand';
+import { APP_NAME, AUTHOR_NAME, LEGAL } from '../lib/brand';
 
 const faqs: { q: string; a: ReactNode; webOnly?: boolean; serverOnly?: boolean }[] = [
   {
@@ -126,7 +126,7 @@ export default function SupportPage() {
                   {email}
                 </a>
               </dd>
-              {LEGAL.infoEmail && (
+              {LEGAL.infoEmail && LEGAL.infoEmail !== email && (
                 <>
                   <dt className="font-medium text-slate-800 dark:text-slate-100">General information</dt>
                   <dd>
@@ -147,7 +147,7 @@ export default function SupportPage() {
           </p>
         )}
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          {APP_NAME} is provided by {COMPANY_LEGAL_NAME}. See our <Link to="/privacy" className="underline">Privacy Policy</Link> and{' '}
+          {APP_NAME} is made by {AUTHOR_NAME}. See our <Link to="/privacy" className="underline">Privacy Policy</Link> and{' '}
           <Link to="/terms" className="underline">Terms of Service</Link>.
         </p>
       </section>
