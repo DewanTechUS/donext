@@ -12,7 +12,7 @@ export function Toast({ message, onDone, ms = 5000 }: { message: string; onDone:
   }, [message, ms]);
 
   return (
-    <div className="safe-pb-3 pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-3">
+    <div className="safe-pb-3 pointer-events-none fixed inset-x-0 bottom-20 z-30 flex justify-center px-3">
       <div
         role="status"
         className="pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl bg-slate-900 p-3 pl-4 text-sm text-white shadow-2xl dark:bg-slate-100 dark:text-slate-900"

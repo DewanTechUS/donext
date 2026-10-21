@@ -89,6 +89,10 @@
 .safe-pb-6 {
   padding-bottom: calc(1.5rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));
 }
+/* Floating mic button: clear of the gesture bar. */
+.safe-mb-fab {
+  margin-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
 /* Floating cards at the bottom of the screen (reminders). */
 .safe-pb-3 {
   padding-bottom: calc(0.75rem + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)));

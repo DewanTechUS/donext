@@ -25,3 +25,18 @@ export function useReadAloud(): [boolean, (on: boolean) => void] {
   }, []);
   return [on, setReadAloud];
 }
+
+/** The voice and speed used for reading aloud (saved on this device). */
+export interface VoicePrefs {
+  /** A voice id from listVoices(), or '' for the device's default. */
+  voiceId: string;
+  rate: number;
+}
+const VOICE_KEY = 'dt.voice';
+export const SPEEDS = [
+  { value: 0.85, label: 'Slower' },
+  { value: 1, label: 'Normal' },
+  { value: 1.15, label: 'Faster' },
+];
+export const loadVoicePrefs = (): VoicePrefs => ({ voiceId: '', rate: 1, ...(storage.get<Partial<VoicePrefs>>(VOICE_KEY) ?? {}) });
+export const saveVoicePrefs = (p: VoicePrefs) => storage.set(VOICE_KEY, p);

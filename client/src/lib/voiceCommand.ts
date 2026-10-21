@@ -126,7 +126,26 @@ export function confirmationText(f: Pick<TaskFields, 'title' | 'dueDate' | 'dueT
   return `${parts.join(', ')}.`;
 }
 
-/** The spoken version: just the task, without "Added" ("Job, tomorrow at 9:00 AM, high priority…"). */
+/**
+ * The spoken version, in short natural sentences and without "Added":
+ * "Job, tomorrow at 9:00 AM. High priority. I'll remind you 1 hour before."
+ */
 export function spokenConfirmation(f: Parameters<typeof confirmationText>[0], now = new Date()): string {
-  return confirmationText(f, now).replace(/^Added /, '').replace(/, Tomorrow/, ', tomorrow').replace(/, Today/, ', today');
+  const today = todayISO(now);
+  const when = f.dueDate
+    ? `${formatDueDate(f.dueDate, today).replace(/^(Today|Tomorrow)$/, (d) => d.toLowerCase())}${f.dueTime ? ` at ${formatTime(f.dueTime)}` : ''}`
+    : '';
+  const sentences = [when ? `${f.title.trim()}, ${when}.` : `${f.title.trim()}.`];
+  if (f.priority !== 'medium') sentences.push(`${f.priority === 'high' ? 'High' : 'Low'} priority.`);
+  if (f.dueDate && f.reminderMinutes !== null) {
+    sentences.push(
+      f.reminderMinutes < 0
+        ? 'No reminder.'
+        : f.reminderMinutes === 0
+          ? 'I’ll remind you at that time.'
+          : `I’ll remind you ${describeLead(f.reminderMinutes).toLowerCase()}.`,
+    );
+  }
+  if (f.subtasks.length) sentences.push(`${f.subtasks.length} sub-item${f.subtasks.length === 1 ? '' : 's'}.`);
+  return sentences.join(' ');
 }

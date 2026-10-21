@@ -1,7 +1,7 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { defaultFilters, type SortKey, type StatusFilter, type TaskFilters } from '../lib/filters';
 import { PRIORITIES, type Priority } from '../lib/types';
-import { SearchIcon } from './Icons';
+import { FilterIcon, SearchIcon } from './Icons';
 
 interface FilterBarProps {
   filters: TaskFilters;
@@ -20,25 +20,43 @@ export function FilterBar({ filters, categories, onChange }: FilterBarProps) {
   const set = (patch: Partial<TaskFilters>) => onChange({ ...filters, ...patch });
   const isFiltered =
     filters.query || filters.status !== 'all' || filters.priority !== 'all' || filters.category || filters.sort !== 'due';
+  // How many filters (besides search) are changed, shown on the Filters button.
+  const changed = [filters.status !== 'all', filters.priority !== 'all', !!filters.category, filters.sort !== 'due'].filter(Boolean).length;
+  const [open, setOpen] = useState(false);
 
   return (
     <section aria-label="Search and filter tasks" className="space-y-3">
-      <div className="relative">
-        <label htmlFor={`${id}-q`} className="sr-only">
-          Search tasks
-        </label>
-        <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          id={`${id}-q`}
-          type="search"
-          className="input pl-10"
-          placeholder="Search tasks"
-          value={filters.query}
-          onChange={(e) => set({ query: e.target.value })}
-        />
+      <div className="flex gap-2">
+        <div className="relative min-w-0 flex-1">
+          <label htmlFor={`${id}-q`} className="sr-only">
+            Search tasks
+          </label>
+          <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            id={`${id}-q`}
+            type="search"
+            className="input pl-10"
+            placeholder="Search tasks"
+            value={filters.query}
+            onChange={(e) => set({ query: e.target.value })}
+          />
+        </div>
+        <button
+          type="button"
+          className={`btn-secondary shrink-0 px-3 ${changed ? 'border-brand-400 text-brand-700 dark:text-brand-300' : ''}`}
+          aria-expanded={open}
+          aria-controls={`${id}-filters`}
+          onClick={() => setOpen((o) => !o)}
+        >
+          <FilterIcon width={18} height={18} />
+          <span className="hidden sm:inline">Filters</span>
+          {changed > 0 && <span className="rounded-full bg-brand-600 px-1.5 text-xs font-semibold text-white">{changed}</span>}
+          <span className="sr-only sm:hidden">Filters</span>
+        </button>
       </div>
 
-      <div className="flex flex-wrap items-end gap-2">
+      {open && (
+      <div id={`${id}-filters`} className="flex flex-wrap items-end gap-2">
         <div role="group" aria-label="Status" className="inline-flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
           {statuses.map((s) => (
             <button
@@ -107,6 +125,7 @@ export function FilterBar({ filters, categories, onChange }: FilterBarProps) {
           </button>
         )}
       </div>
+      )}
     </section>
   );
 }

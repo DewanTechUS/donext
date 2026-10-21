@@ -80,3 +80,14 @@ describe('spoken replies', () => {
     ).toBe('Added Job, Tomorrow at 9:00 AM, high priority, reminder 1 hour before.');
   });
 });
+
+describe('spokenConfirmation', () => {
+  it('reads like natural sentences', async () => {
+    const { spokenConfirmation } = await import('./voiceCommand');
+    const { forSpeech } = await import('./sound');
+    const said = spokenConfirmation({ title: 'Job', dueDate: '2026-10-14', dueTime: '09:00', priority: 'high', reminderMinutes: 60, subtasks: [] }, now);
+    expect(said).toBe('Job, tomorrow at 9:00 AM. High priority. I’ll remind you 1 hour before.');
+    expect(forSpeech(said)).toBe('Job, tomorrow at 9 AM. High priority. I’ll remind you 1 hour before.');
+    expect(spokenConfirmation({ title: 'Call the bank', dueDate: null, dueTime: null, priority: 'medium', reminderMinutes: null, subtasks: [] }, now)).toBe('Call the bank.');
+  });
+});

@@ -219,3 +219,15 @@ export const SpeakerOffIcon = (p: P) => (
     <path d="m22 9-6 6M16 9l6 6" />
   </svg>
 );
+export const MoreIcon = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="5" cy="12" r="1.4" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+    <circle cx="19" cy="12" r="1.4" fill="currentColor" />
+  </svg>
+);
+export const FilterIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M4 6h16M7 12h10M10 18h4" />
+  </svg>
+);

@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import type { ReminderSound } from './reminders';
+import { loadVoicePrefs } from './voicePrefs';
 
 /**
  * Reminder sounds are synthesised with the Web Audio API (no audio files), and reminders
@@ -76,20 +77,91 @@ const webTts = () => typeof window !== 'undefined' && 'speechSynthesis' in windo
 
 export const canSpeak = () => nativeTts() || webTts();
 
-/** Reads text aloud with the device's voice (after the sound, if any). */
+/** A voice the user can pick in Account → Reminders & voice. */
+export interface VoiceOption {
+  id: string;
+  label: string;
+  lang: string;
+}
+
+const lang = () => (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
+const sameLanguage = (v: { lang: string }) => v.lang.toLowerCase().replace('_', '-').startsWith(lang().slice(0, 2).toLowerCase());
+const languageName = (code: string) => {
+  try {
+    return new Intl.DisplayNames([lang()], { type: 'language' }).of(code.replace('_', '-')) ?? code;
+  } catch {
+    return code;
+  }
+};
+
+let nativeVoices: { voiceURI: string; name: string; lang: string }[] | null = null;
+async function loadNativeVoices() {
+  nativeVoices ??= (await TextToSpeech.getSupportedVoices()).voices;
+  return nativeVoices;
+}
+
+function webVoices(): Promise<SpeechSynthesisVoice[]> {
+  const now = window.speechSynthesis.getVoices();
+  if (now.length) return Promise.resolve(now);
+  // Some browsers load voices a moment later.
+  return new Promise((resolve) => {
+    const done = () => resolve(window.speechSynthesis.getVoices());
+    window.speechSynthesis.addEventListener('voiceschanged', done, { once: true });
+    setTimeout(done, 1000);
+  });
+}
+
+/** Voices for the phone's language, best-sounding first. */
+export async function listVoices(): Promise<VoiceOption[]> {
+  if (!canSpeak()) return [];
+  if (nativeTts()) {
+    const voices = (await loadNativeVoices()).filter(sameLanguage);
+    return voices.map((v, i) => ({
+      id: v.voiceURI || v.name,
+      // Android voice names look like "en-us-x-tpf-local"; show something readable.
+      label: /^[a-z]{2,3}-[a-z]{2}-x-/i.test(v.name)
+        ? `${languageName(v.lang)} · voice ${i + 1}${/network/i.test(v.name) ? ' (needs internet)' : ''}`
+        : v.name,
+      lang: v.lang,
+    }));
+  }
+  const natural = /natural|neural|online|enhanced|premium/i;
+  return (await webVoices())
+    .filter(sameLanguage)
+    .sort((a, b) => Number(natural.test(b.name)) - Number(natural.test(a.name)) || Number(b.localService) - Number(a.localService))
+    .map((v) => ({ id: v.voiceURI || v.name, label: v.name, lang: v.lang }));
+}
+
+/** Makes text sound natural when spoken: "9:00 AM" → "9 AM". */
+export const forSpeech = (text: string) => text.replace(/\b(\d{1,2}):00\s?(AM|PM)\b/gi, '$1 $2');
+
+/** Reads text aloud with the chosen voice and speed (after the sound, if any). */
 export function speak(text: string, delayMs = 0) {
   if (!canSpeak()) return;
+  const { voiceId, rate } = loadVoicePrefs();
+  const words = forSpeech(text);
   setTimeout(() => {
     if (nativeTts()) {
-      void TextToSpeech.stop()
-        .catch(() => undefined)
-        .then(() => TextToSpeech.speak({ text, lang: navigator.language || 'en-US', rate: 1, category: 'playback' }))
-        .catch(() => undefined);
+      void (async () => {
+        await TextToSpeech.stop().catch(() => undefined);
+        const voices = voiceId ? await loadNativeVoices().catch(() => []) : [];
+        const index = voices.findIndex((v) => (v.voiceURI || v.name) === voiceId);
+        await TextToSpeech.speak({ text: words, lang: lang(), rate, category: 'playback', ...(index >= 0 ? { voice: index } : {}) });
+      })().catch(() => undefined);
       return;
     }
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.rate = 1;
-    window.speechSynthesis.speak(u);
+    void webVoices().then((voices) => {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(words);
+      u.rate = rate;
+      // The chosen voice, or the most natural-sounding one for the language.
+      const natural = /natural|neural|online|enhanced|premium/i;
+      u.voice =
+        voices.find((v) => (v.voiceURI || v.name) === voiceId) ??
+        voices.find((v) => sameLanguage(v) && natural.test(v.name)) ??
+        voices.find((v) => sameLanguage(v) && v.default) ??
+        null;
+      window.speechSynthesis.speak(u);
+    });
   }, delayMs);
 }

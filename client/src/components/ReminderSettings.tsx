@@ -4,6 +4,7 @@ import { canSpeak, playSound, speak, unlockAudio } from '../lib/sound';
 import { BellIcon } from './Icons';
 import { testReminder } from './ReminderCenter';
 import { useReadAloud } from '../lib/voicePrefs';
+import { VoiceChoice } from './VoiceChoice';
 import {
   exactAlarmsAllowed,
   hasNativeNotifications,
@@ -52,7 +53,7 @@ export function ReminderSettingsSection() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 id={`${id}-h`} className="flex items-center gap-2 text-lg font-semibold">
-            <BellIcon /> Reminders
+            <BellIcon /> Reminders &amp; voice
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400">
             Get a sound or hear the task read aloud when it's due. Saved on this device.
@@ -134,6 +135,8 @@ export function ReminderSettingsSection() {
             </span>
           </span>
         </label>
+
+        {readAloud && <VoiceChoice />}
 
         {native && <PhoneNotifications />}
 

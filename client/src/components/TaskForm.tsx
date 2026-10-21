@@ -54,6 +54,8 @@ interface TaskFormProps {
    */
   voice?: boolean;
   speech?: SpeechService;
+  /** Start listening as soon as the form opens (from the mic button). */
+  autoListen?: boolean;
   /**
    * Runs a voice command said or typed into the composer ("mark the job as done",
    * "what do I have today?") and returns the reply to show and read aloud.
@@ -71,6 +73,7 @@ export function TaskForm({
   onCancel,
   voice,
   speech,
+  autoListen,
   onCommand,
 }: TaskFormProps) {
   const [fields, setFields] = useState<TaskFields>(initial);
@@ -176,6 +179,7 @@ export function TaskForm({
         setReply(null);
       }}
       onSpeechEnd={onSpeechEnd}
+      autoStart={autoListen}
       error={errors.title}
       submitting={saving}
       speech={speech}

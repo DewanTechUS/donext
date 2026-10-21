@@ -1,4 +1,4 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin, type PluginListenerHandle } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeech } from '@capacitor-community/speech-recognition';
 
 /**
@@ -177,6 +177,11 @@ async function startNative(handlers: SpeechHandlers, lang: string): Promise<Spee
   if (perm !== 'granted') perm = (await NativeSpeech.requestPermissions()).speechRecognition;
   if (perm !== 'granted') throw new SpeechError('permission-denied');
 
+  // Android: DoNext's own dictation plugin keeps listening through pauses.
+  if (Capacitor.getPlatform() === 'android' && Capacitor.isPluginAvailable('ContinuousSpeech')) {
+    return startAndroid(handlers, lang);
+  }
+
   // Android's recogniser stops after a second or two of silence. To let people pause mid-sentence,
   // keep listening in rounds and join them, until the user taps stop, says "add it", or a whole
   // round passes without speech.
@@ -269,4 +274,48 @@ export function speechErrorMessage(code: SpeechErrorCode, support: SpeechSupport
     default:
       return 'Voice input stopped unexpectedly. Please try again or type your task instead.';
   }
+}
+
+// ---- Android: DoNext's ContinuousSpeech plugin (android/app/src/main/java/.../ContinuousSpeechPlugin.java) ----
+interface ContinuousSpeechPlugin {
+  start(options: { language: string }): Promise<void>;
+  stop(): Promise<void>;
+  addListener(event: 'partial' | 'end', fn: (data: { text: string }) => void): Promise<PluginListenerHandle>;
+  addListener(event: 'error', fn: (data: { code: SpeechErrorCode }) => void): Promise<PluginListenerHandle>;
+}
+const ContinuousSpeech = registerPlugin<ContinuousSpeechPlugin>('ContinuousSpeech');
+
+async function startAndroid(handlers: SpeechHandlers, lang: string): Promise<SpeechSession> {
+  let ended = false;
+  let stopRequested = false;
+  const stop = () => {
+    if (stopRequested) return;
+    stopRequested = true;
+    void ContinuousSpeech.stop().catch(() => undefined);
+  };
+  const subs: PluginListenerHandle[] = [];
+  const timer = setTimeout(stop, MAX_LISTEN_MS);
+  const finish = () => {
+    if (ended) return;
+    ended = true;
+    clearTimeout(timer);
+    subs.forEach((s) => void s.remove());
+    handlers.onEnd();
+  };
+  subs.push(
+    await ContinuousSpeech.addListener('partial', ({ text }) => {
+      if (!text) return;
+      handlers.onTranscript(text);
+      if (SAID_DONE.test(text)) stop(); // "…add it": done talking
+    }),
+    await ContinuousSpeech.addListener('error', ({ code }) => handlers.onError(new SpeechError(code))),
+    await ContinuousSpeech.addListener('end', () => finish()),
+  );
+  try {
+    await ContinuousSpeech.start({ language: lang });
+  } catch (err) {
+    finish();
+    throw new SpeechError('unknown', (err as Error)?.message);
+  }
+  return { stop };
 }

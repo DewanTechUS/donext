@@ -30,7 +30,7 @@ describe('Read aloud', () => {
     await user.type(screen.getByRole('textbox', { name: 'Task' }), 'Call the bank priority high');
     await user.click(screen.getByRole('button', { name: 'Add task' }));
     expect(onSubmit).toHaveBeenCalled();
-    expect(speak).toHaveBeenCalledWith('Call the bank, high priority.'); // spoken without "Added"
+    expect(speak).toHaveBeenCalledWith('Call the bank. High priority.'); // natural sentences, without "Added"
   });
 
   it('stays quiet when switched off with the 🔊 button', async () => {

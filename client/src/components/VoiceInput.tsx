@@ -13,6 +13,8 @@ interface VoiceInputProps {
   onChange: (text: string) => void;
   /** Listening stopped after hearing something; gets the final text (for hands-free commands). */
   onSpeechEnd?: (text: string) => void;
+  /** Start listening right away. */
+  autoStart?: boolean;
   /** id for the text box, so labels and error messages can point at it. */
   inputId: string;
   /** Validation error for the text, shown under the box. */
@@ -30,7 +32,7 @@ interface VoiceInputProps {
  * as the typing fallback when voice isn't available.
  */
 export const VoiceInput = forwardRef<HTMLTextAreaElement | null, VoiceInputProps>(function VoiceInput(
-  { value, onChange, onSpeechEnd, inputId, error, submitting, speech = speechService },
+  { value, onChange, onSpeechEnd, autoStart, inputId, error, submitting, speech = speechService },
   ref,
 ) {
   const support = speech.support();
@@ -51,6 +53,12 @@ export const VoiceInput = forwardRef<HTMLTextAreaElement | null, VoiceInputProps
   const listening = phase === 'listening' || phase === 'starting';
 
   useEffect(() => () => session.current?.stop(), []);
+
+  // Opened from the mic button: start listening (after the one-time explanation, if needed).
+  useEffect(() => {
+    if (autoStart && support !== 'none') void onMicClick();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Grow the box with its content, like a chat composer.
   useEffect(() => {

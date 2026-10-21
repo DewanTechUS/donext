@@ -414,7 +414,7 @@ export function createDemoApi(opts: { storageKey?: string } = {}): Api {
         db.tasks.push({
           id: uuid(),
           title: 'Welcome to DoNext 👋',
-          description: 'Tap New task, then the microphone, and just say what you need to do.',
+          description: 'Tap the blue mic and just say what you need to do.',
           dueDate: null,
           dueTime: null,
           reminderMinutes: null,

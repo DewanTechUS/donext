@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Alert } from '../components/Alert';
 import { CalendarDialog } from '../components/CalendarDialog';
 import { FilterBar } from '../components/FilterBar';
-import { MailIcon, PlusIcon, UsersIcon } from '../components/Icons';
+import { MailIcon, MicIcon, PlusIcon, UsersIcon } from '../components/Icons';
 import { Modal } from '../components/Modal';
 import { PageLoader } from '../components/Spinner';
 import { TaskForm, emptyFields } from '../components/TaskForm';
@@ -31,6 +31,12 @@ export default function TasksPage() {
   const [scope, setScope] = useState<Scope>('personal');
   const [filters, setFilters] = useState<TaskFilters>(defaultFilters);
   const [creating, setCreating] = useState(false);
+  /** Opened from the mic button: start listening right away. */
+  const [listenNow, setListenNow] = useState(false);
+  const openComposer = (listen: boolean) => {
+    setListenNow(listen);
+    setCreating(true);
+  };
   const [editing, setEditing] = useState<Task | null>(null);
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [scheduling, setScheduling] = useState<Task | null>(null);
@@ -86,14 +92,14 @@ export default function TasksPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{user.name === 'Me' ? 'Hi there' : `Hi, ${user.name.split(' ')[0]}`}</h1>
-          <p className="text-slate-600 dark:text-slate-400" aria-live="polite">
-            {inScope.length === 0 ? 'No tasks here yet.' : `${activeCount} active · ${inScope.length - activeCount} done`}
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">{user.name === 'Me' ? 'Hi there' : `Hi, ${user.name.split(' ')[0]}`}</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-400" aria-live="polite">
+            {inScope.length === 0 ? 'No tasks yet' : `${activeCount} to do · ${inScope.length - activeCount} done`}
           </p>
         </div>
-        <button type="button" className="btn-primary w-full sm:w-auto" onClick={() => setCreating(true)}>
+        <button type="button" className="btn-secondary hidden sm:inline-flex" onClick={() => openComposer(false)}>
           <PlusIcon /> New task
         </button>
       </div>
@@ -167,7 +173,7 @@ export default function TasksPage() {
               ? 'Tasks you add here are visible to everyone in this list.'
               : 'Add your first task by typing or with the microphone. Personal tasks are only visible to you.'}
           </p>
-          <button type="button" className="btn-primary mt-2" onClick={() => setCreating(true)}>
+          <button type="button" className="btn-primary mt-2" onClick={() => openComposer(true)}>
             <PlusIcon /> Add a task
           </button>
         </div>
@@ -179,7 +185,7 @@ export default function TasksPage() {
           </button>
         </div>
       ) : (
-        <ul className="space-y-3" aria-label="Tasks">
+        <ul className="space-y-3 pb-24" aria-label="Tasks">
           {visible.map((task) => {
             const list = task.listId ? listsById.get(task.listId) : undefined;
             return (
@@ -205,6 +211,7 @@ export default function TasksPage() {
         <Modal title="New task" onClose={() => setCreating(false)}>
           <TaskForm
             voice
+            autoListen={listenNow}
             initial={{ ...emptyFields, listId: currentList?.id ?? null }}
             categories={categories}
             lists={lists}
@@ -265,6 +272,18 @@ export default function TasksPage() {
           </div>
         </Modal>
       )}
+      {/* One tap: open New task and start listening. */}
+      {!creating && !editing && (
+        <button
+          type="button"
+          onClick={() => openComposer(true)}
+          aria-label="New task: speak it"
+          className="safe-mb-fab fixed bottom-5 right-5 z-30 flex h-16 w-16 items-center justify-center rounded-full bg-brand-600 text-white shadow-xl shadow-brand-600/30 transition-transform hover:bg-brand-700 active:scale-95"
+        >
+          <MicIcon width={30} height={30} />
+        </button>
+      )}
+
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   );

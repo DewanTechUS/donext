@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { formatDueDate, formatTime, formatTimestamp, isOverdue, nowTime, timeLeft, todayISO } from '../lib/filters';
+import { useEffect, useRef, useState } from 'react';
+import { formatDueDate, formatTime, isOverdue, nowTime, timeLeft, todayISO } from '../lib/filters';
 import { useNow } from '../hooks/useNow';
 import type { Task } from '../lib/types';
 import { Avatar } from './Avatar';
-import { CalendarIcon, CheckIcon, ClockIcon, HourglassIcon, EditIcon, FlagIcon, TagIcon, TrashIcon, UsersIcon } from './Icons';
+import { CalendarIcon, CheckIcon, ClockIcon, HourglassIcon, EditIcon, FlagIcon, MoreIcon, TagIcon, TrashIcon, UsersIcon } from './Icons';
 
 interface Person {
   id: string;
@@ -59,9 +59,9 @@ export function TaskItem({ task, listName, addedBy, assignee, meId, onToggle, on
   const shown = expanded ? subtasks : subtasks.slice(0, SUBTASK_PREVIEW);
 
   return (
-    <li className="card relative grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 overflow-hidden p-3 pl-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:p-4 sm:pl-5">
+    <li className="card relative grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 overflow-visible p-3 pl-4 sm:gap-x-3 sm:p-4 sm:pl-5">
       {/* Priority stripe */}
-      <span aria-hidden className={`absolute inset-y-0 left-0 w-1 ${task.completed ? 'bg-slate-300 dark:bg-slate-700' : p.stripe}`} />
+      <span aria-hidden className={`absolute inset-y-0 left-0 w-1 rounded-l-2xl ${task.completed ? 'bg-slate-300 dark:bg-slate-700' : p.stripe}`} />
 
       <button
         type="button"
@@ -211,37 +211,66 @@ export function TaskItem({ task, listName, addedBy, assignee, meId, onToggle, on
           </div>
         )}
 
-        <p className="mt-2 hidden text-[11px] text-slate-400 dark:text-slate-500 sm:block">
-          Added <time dateTime={task.createdAt}>{formatTimestamp(task.createdAt)}</time>
-        </p>
       </div>
 
-      <div className="col-start-2 mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-1 dark:border-slate-800 sm:col-start-3 sm:row-start-1 sm:mt-0 sm:border-0 sm:pt-0">
-        <p className="text-[11px] text-slate-400 dark:text-slate-500 sm:hidden">
-          Added <time dateTime={task.createdAt}>{formatTimestamp(task.createdAt)}</time>
-        </p>
-        <div className="-mr-1 flex shrink-0 gap-1">
-          {onCalendar && !task.completed && (
-            <button type="button" onClick={onCalendar} className="btn-ghost" aria-label={`Add “${task.title}” to calendar`} title="Add to calendar">
-              <CalendarIcon />
+      <TaskMenu title={task.title} onEdit={onEdit} onCalendar={onCalendar && !task.completed ? onCalendar : undefined} onDelete={onDelete} />
+    </li>
+  );
+}
+
+/** The ⋯ menu on a task: Edit, Add to calendar, Delete. */
+function TaskMenu({ title, onEdit, onCalendar, onDelete }: { title: string; onEdit: () => void; onCalendar?: () => void; onDelete?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent ? e.key === 'Escape' : !box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', close);
+    return () => {
+      document.removeEventListener('pointerdown', close);
+      document.removeEventListener('keydown', close);
+    };
+  }, [open]);
+
+  const item = 'flex min-h-touch w-full items-center gap-3 px-4 text-left text-[15px] hover:bg-slate-50 dark:hover:bg-slate-800';
+  const run = (fn: () => void) => () => {
+    setOpen(false);
+    fn();
+  };
+
+  return (
+    <div ref={box} className="relative -mr-1">
+      <button
+        type="button"
+        className="btn-ghost"
+        aria-label={`More for “${title}”`}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <MoreIcon />
+      </button>
+      {open && (
+        <div role="menu" className="absolute right-0 top-full z-20 mt-1 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+          <button type="button" role="menuitem" className={item} onClick={run(onEdit)} aria-label={`Edit “${title}”`}>
+            <EditIcon width={18} height={18} /> Edit
+          </button>
+          {onCalendar && (
+            <button type="button" role="menuitem" className={item} onClick={run(onCalendar)} aria-label={`Add “${title}” to calendar`}>
+              <CalendarIcon width={18} height={18} /> Add to calendar
             </button>
           )}
-          <button type="button" onClick={onEdit} className="btn-ghost" aria-label={`Edit “${task.title}”`} title="Edit">
-            <EditIcon />
-          </button>
           {onDelete && (
-            <button
-              type="button"
-              onClick={onDelete}
-              className="btn-ghost hover:text-red-600 dark:hover:text-red-400"
-              aria-label={`Delete “${task.title}”`}
-              title="Delete"
-            >
-              <TrashIcon />
+            <button type="button" role="menuitem" className={`${item} text-red-600 dark:text-red-400`} onClick={run(onDelete)} aria-label={`Delete “${title}”`}>
+              <TrashIcon width={18} height={18} /> Delete
             </button>
           )}
         </div>
-      </div>
-    </li>
+      )}
+    </div>
   );
 }
