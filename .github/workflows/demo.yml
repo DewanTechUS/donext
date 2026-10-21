@@ -49,6 +49,14 @@ jobs:
       - name: Single-page app fallback (refreshing /lists etc.)
         run: cp client/dist/index.html client/dist/404.html
 
+      # Real files for the public pages, so they answer "200 OK" (Google Play checks the privacy policy URL).
+      - name: Public pages (privacy, terms, support)
+        run: |
+          for page in privacy terms support; do
+            mkdir -p "client/dist/$page"
+            cp client/dist/index.html "client/dist/$page/index.html"
+          done
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: client/dist
