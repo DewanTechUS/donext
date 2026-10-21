@@ -21,6 +21,7 @@ import {
 } from '../lib/nativeReminders';
 import { playSound, speak, unlockAudio } from '../lib/sound';
 import { storage } from '../lib/storage';
+import { readAloudEnabled } from '../lib/voicePrefs';
 
 const NOTIFY_ASKED = 'dt.notifyAsked';
 import type { Task } from '../lib/types';
@@ -57,7 +58,7 @@ export function ReminderCenter() {
     // In the phone app the system notification already plays the chime.
     const systemRings = nativeNotificationsActive && items.some((i) => !i.test);
     if (!systemRings) playSound(settings.sound);
-    if (settings.speak) speak(items.map((i) => `Reminder. ${i.text}`).join(' '), settings.sound === 'none' ? 0 : 900);
+    if (readAloudEnabled()) speak(items.map((i) => `Reminder. ${i.text}`).join(' '), settings.sound === 'none' ? 0 : 900);
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.visibilityState === 'hidden') {
       for (const i of items) {
         try {

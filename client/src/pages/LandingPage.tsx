@@ -42,31 +42,13 @@ function LocalWelcome() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center py-6 text-center sm:py-12">
-      <AppLogo size={96} />
+      <AppLogo size={80} />
       <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-brand-900 dark:text-white">
         Know what to <span className="text-brand-600 dark:text-brand-400">do next</span>.
       </h1>
-      <p className="mt-4 text-lg text-slate-600 dark:text-slate-300">
-        The to-do list you can talk to. Say <em>“I have a job tomorrow at 9, priority high, remind me 1 hour before”</em> and it’s
-        done.
-      </p>
+      <p className="mt-3 text-lg text-slate-600 dark:text-slate-300">The to-do list you can talk to.</p>
 
-      <ul className="mt-8 w-full space-y-3 text-left">
-        {[
-          { Icon: MicIcon, text: 'Add and manage tasks with your voice' },
-          { Icon: CheckIcon, text: 'Due dates, priorities, sub-items and reminders' },
-          { Icon: ShieldIcon, text: 'Private: your tasks stay on this device. No account needed.' },
-        ].map(({ Icon, text }) => (
-          <li key={text} className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-slate-800 dark:text-brand-300">
-              <Icon width={20} height={20} />
-            </span>
-            <span className="text-slate-700 dark:text-slate-200">{text}</span>
-          </li>
-        ))}
-      </ul>
-
-      <form onSubmit={(e) => void begin(e)} className="mt-8 w-full space-y-3 text-left">
+      <form onSubmit={(e) => void begin(e)} className="mt-10 w-full space-y-3 text-left">
         <div>
           <label htmlFor="welcome-name" className="label">
             What should we call you? <span className="font-normal text-slate-500 dark:text-slate-400">(optional)</span>
@@ -83,8 +65,7 @@ function LocalWelcome() {
         </div>
         {error && <Alert onDismiss={() => setError(null)}>{error}</Alert>}
         <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/50 dark:text-amber-100">
-          <strong>Your tasks are saved only on this device.</strong> We can’t back them up or recover them. Uninstalling the app,
-          clearing its data or changing phones deletes them, so you’re responsible for keeping anything important.
+          Your tasks are saved only on this device, so you’re responsible for keeping them. Uninstalling the app deletes them.
         </p>
         <button type="submit" className="btn-primary w-full text-lg" disabled={starting}>
           {starting && <Spinner className="h-5 w-5" label="Getting started" />}

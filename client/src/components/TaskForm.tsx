@@ -5,6 +5,8 @@ import { describeLead, LEAD_OPTIONS, loadReminderSettings } from '../lib/reminde
 import { DueDateField } from './DueDatePicker';
 import { SmartSuggestions, suggestionFor } from './SmartSuggestions';
 import { canSpeak, speak } from '../lib/sound';
+import { readAloudEnabled } from '../lib/voicePrefs';
+import { ReadAloudToggle } from './ReadAloudToggle';
 import { confirmationText, parseVoiceCommand, type VoiceCommand } from '../lib/voiceCommand';
 import { Spinner } from './Spinner';
 import { SubtaskEditor } from './SubtaskEditor';
@@ -102,8 +104,8 @@ export function TaskForm({
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
   };
 
-  /** Saves the task (or runs a voice command). `spoken`: started hands-free, so reply out loud. */
-  const save = async (base: TaskFields, spoken: boolean) => {
+  /** Saves the task (or runs a voice command); confirmations are read aloud when Read aloud is on. */
+  const save = async (base: TaskFields) => {
     let f = base;
     if (voice) {
       const cmd = parseVoiceCommand(base.title);
@@ -113,7 +115,7 @@ export function TaskForm({
         try {
           const res = await onCommand(cmd);
           setReply(res.text);
-          if (canSpeak()) speak(res.text);
+          if (readAloudEnabled() && canSpeak()) speak(res.text);
           if (res.done) setFields((x) => ({ ...x, title: '' }));
         } catch (err) {
           setFormError(err instanceof Error ? err.message : 'That didn’t work. Please try again.');
@@ -139,7 +141,8 @@ export function TaskForm({
     setFormError(null);
     try {
       await onSubmit(f);
-      if (spoken && canSpeak()) speak(confirmationText(f));
+      // Say what was added ("Added Job, tomorrow at 9:00 AM, high priority…").
+      if (voice && readAloudEnabled() && canSpeak()) speak(confirmationText(f));
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Could not save the task. Please try again.');
     } finally {
@@ -149,13 +152,13 @@ export function TaskForm({
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    void save(fields, false);
+    void save(fields);
   };
 
   /** Listening stopped: run commands and "…, add it" right away, hands-free. */
   const onSpeechEnd = (text: string) => {
     const cmd = parseVoiceCommand(text);
-    if (cmd.kind !== 'add' || cmd.submit) void save({ ...fieldsRef.current, title: text }, true);
+    if (cmd.kind !== 'add' || cmd.submit) void save({ ...fieldsRef.current, title: text });
   };
 
   const errProps = (key: keyof TaskFields) =>
@@ -377,14 +380,12 @@ export function TaskForm({
         </Alert>
       )}
 
-      {voice && !fields.title.trim() && !reply && (
-        <div className="rounded-2xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-800/60 dark:text-slate-300">
-          <p className="font-medium text-slate-800 dark:text-slate-100">Try saying:</p>
-          <ul className="mt-1 space-y-1">
-            <li>“I have a job tomorrow at 9, priority high, remind me 1 hour before. Add it.”</li>
-            <li>“What do I have today?”</li>
-            <li>“Mark the job as done.”</li>
-          </ul>
+      {voice && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {!fields.title.trim() && !reply ? <>Try: “Job tomorrow at 9, priority high, add it”</> : null}
+          </p>
+          <ReadAloudToggle />
         </div>
       )}
 

@@ -12,7 +12,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTasks } from '../context/TasksContext';
 import { categoriesOf, defaultFilters, filterTasks, type TaskFilters } from '../lib/filters';
 import type { SharedList, Task } from '../lib/types';
-import { agendaText, findTask, type VoiceCommand } from '../lib/voiceCommand';
+import { agendaText, confirmationText, findTask, type VoiceCommand } from '../lib/voiceCommand';
+import { Toast } from '../components/Toast';
 import { IS_LOCAL } from '../lib/api';
 
 /** Which tasks to show: my personal tasks, one shared list, or everything. */
@@ -34,6 +35,8 @@ export default function TasksPage() {
   const [deleting, setDeleting] = useState<Task | null>(null);
   const [scheduling, setScheduling] = useState<Task | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  /** "✓ Added Job, Tomorrow at 9:00 AM…", shown briefly after saving. */
+  const [toast, setToast] = useState<string | null>(null);
   const location = useLocation();
   const [passwordReset, setPasswordReset] = useState(() => Boolean((location.state as { passwordReset?: boolean } | null)?.passwordReset));
 
@@ -85,7 +88,7 @@ export default function TasksPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{`Hi, ${user.name.split(' ')[0]}`}</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{user.name === 'Me' ? 'Hi there' : `Hi, ${user.name.split(' ')[0]}`}</h1>
           <p className="text-slate-600 dark:text-slate-400" aria-live="polite">
             {inScope.length === 0 ? 'No tasks here yet.' : `${activeCount} active · ${inScope.length - activeCount} done`}
           </p>
@@ -212,6 +215,7 @@ export default function TasksPage() {
             onSubmit={async (fields) => {
               await store.create(fields);
               setCreating(false);
+              setToast(confirmationText(fields));
             }}
           />
         </Modal>
@@ -228,6 +232,7 @@ export default function TasksPage() {
             onCancel={() => setEditing(null)}
             onSubmit={async (fields) => {
               await store.update(editing.id, fields);
+              setToast(`Saved “${fields.title.trim()}”.`);
               setEditing(null);
             }}
           />
@@ -260,6 +265,7 @@ export default function TasksPage() {
           </div>
         </Modal>
       )}
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   );
 }

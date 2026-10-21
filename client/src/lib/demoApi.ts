@@ -421,11 +421,7 @@ export function createDemoApi(opts: { storageKey?: string } = {}): Api {
           priority: 'medium',
           category: 'Getting started',
           completed: false,
-          subtasks: [
-            { id: uuid(), title: 'Say: “I have a job tomorrow at 9, priority high, remind me 1 hour before. Add it.”', done: false },
-            { id: uuid(), title: 'Ask: “What do I have today?”', done: false },
-            { id: uuid(), title: 'Say: “Mark the welcome task as done.”', done: false },
-          ],
+          subtasks: [],
           listId: null,
           assigneeId: null,
           createdBy: user.id,

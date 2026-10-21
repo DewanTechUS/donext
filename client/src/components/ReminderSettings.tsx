@@ -3,6 +3,7 @@ import { LEAD_OPTIONS, loadReminderSettings, saveReminderSettings, type Reminder
 import { canSpeak, playSound, speak, unlockAudio } from '../lib/sound';
 import { BellIcon } from './Icons';
 import { testReminder } from './ReminderCenter';
+import { useReadAloud } from '../lib/voicePrefs';
 import {
   exactAlarmsAllowed,
   hasNativeNotifications,
@@ -36,6 +37,7 @@ export function ReminderSettingsSection() {
   const id = useId();
   const voice = canSpeak();
   const native = hasNativeNotifications();
+  const [readAloud, setReadAloud] = useReadAloud();
 
   useEffect(() => saveReminderSettings(s), [s]);
   // Opened from a reminder's Settings link: scroll here.
@@ -116,18 +118,18 @@ export function ReminderSettingsSection() {
           <input
             type="checkbox"
             className="mt-1 h-5 w-5 shrink-0 rounded accent-brand-600"
-            checked={voice && s.speak}
+            checked={voice && readAloud}
             disabled={!voice}
             onChange={(e) => {
-              update({ speak: e.target.checked });
+              setReadAloud(e.target.checked);
               if (e.target.checked) speak('Reminder. Pay the bills is due now.');
             }}
           />
           <span>
-            <span className="font-medium">Read reminders aloud</span>
+            <span className="font-medium">Read aloud</span>
             <span className="block text-sm text-slate-600 dark:text-slate-400">
               {voice
-                ? 'Your device says the task out loud, for example “Reminder. Pay the bills is due now.”'
+                ? 'Your device says reminders, confirmations (“Added Job, tomorrow at 9:00 AM”) and answers out loud. Also switchable with 🔊 in New task.'
                 : 'Reading aloud isn’t supported in this browser.'}
             </span>
           </span>

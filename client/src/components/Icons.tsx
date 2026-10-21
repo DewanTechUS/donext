@@ -207,3 +207,15 @@ export const HourglassIcon = (p: P) => (
     <path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 10 0V2M7 22v-4a5 5 0 0 1 10 0v4" />
   </svg>
 );
+export const SpeakerIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M11 5 6 9H3v6h3l5 4V5z" />
+    <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
+  </svg>
+);
+export const SpeakerOffIcon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M11 5 6 9H3v6h3l5 4V5z" />
+    <path d="m22 9-6 6M16 9l6 6" />
+  </svg>
+);
