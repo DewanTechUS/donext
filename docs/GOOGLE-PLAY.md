@@ -132,7 +132,7 @@ DoNext is free and open source (MIT). Made by Dewan Mahmud.
 | --- | --- |
 | App icon (512 × 512) | `icon-512.png` |
 | Feature graphic (1024 × 500) | `feature-graphic-1024x500.jpg` |
-| Phone screenshots (upload all 6, in order) | `screenshot-1-voice.jpg` … `screenshot-6-welcome.jpg` |
+| Phone screenshots (upload all 6, in order) | `screenshot-1-voice.jpg` … `screenshot-6-date.jpg` |
 
 **Store settings** (under **Store presence → Store settings**):
 
