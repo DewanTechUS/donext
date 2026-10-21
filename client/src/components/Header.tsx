@@ -65,7 +65,9 @@ export function Header() {
     status === 'authenticated'
       ? [
           { to: '/', label: 'My tasks', end: true, Icon: ListIcon },
-          ...(IS_LOCAL ? [] : [{ to: '/lists', label: 'Shared lists', end: false, Icon: UsersIcon, badge: invites.length }]),
+          ...(IS_LOCAL
+            ? [{ to: '/profiles', label: 'Switch person', end: false, Icon: UsersIcon }]
+            : [{ to: '/lists', label: 'Shared lists', end: false, Icon: UsersIcon, badge: invites.length }]),
           { to: '/account', label: 'Account', end: false, Icon: UserIcon },
         ]
       : [];

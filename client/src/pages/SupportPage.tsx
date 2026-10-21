@@ -66,7 +66,7 @@ const faqs: { q: string; a: ReactNode; webOnly?: boolean; serverOnly?: boolean }
     a: IS_LOCAL ? (
       <>
         Your tasks are stored only on this device. To delete everything, go to <Link to="/account" className="font-semibold underline">Account</Link>{' '}
-        and tap <strong>Erase all data</strong>, or uninstall the app.
+        and tap <strong>Erase my data</strong> (it removes only your profile), or uninstall the app to remove everyone’s.
       </>
     ) : (
       <>

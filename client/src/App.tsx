@@ -4,6 +4,8 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { GuestOnly, RequireAuth, ServerOnly } from './components/RequireAuth';
 import { PageLoader } from './components/Spinner';
+import { ProfilePicker, profileChosen, useProfiles } from './components/ProfilePicker';
+import { IS_LOCAL } from './lib/api';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TasksProvider } from './context/TasksContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -21,7 +23,21 @@ const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
 /** Signed-in users see their tasks at "/", visitors see the landing page. */
 function Home() {
   const { status } = useAuth();
-  return status === 'authenticated' ? <TasksPage /> : <LandingPage />;
+  if (status !== 'authenticated') return <LandingPage />;
+  return IS_LOCAL ? <LocalHome /> : <TasksPage />;
+}
+
+/** Local app: when several people use this phone, ask who it is when the app opens. */
+function LocalHome() {
+  const profiles = useProfiles();
+  if (profiles === null) return <PageLoader label="Loading…" />;
+  if (profiles.length > 1 && !profileChosen()) return <ProfilePicker profiles={profiles} />;
+  return <TasksPage />;
+}
+
+function ProfilesPage() {
+  const profiles = useProfiles();
+  return profiles === null ? <PageLoader label="Loading…" /> : <ProfilePicker profiles={profiles} />;
 }
 
 export default function App() {
@@ -83,6 +99,14 @@ export default function App() {
                         <ServerOnly>
                           <ResetPasswordPage />
                         </ServerOnly>
+                      }
+                    />
+                    <Route
+                      path="profiles"
+                      element={
+                        <RequireAuth>
+                          <ProfilesPage />
+                        </RequireAuth>
                       }
                     />
                     <Route path="support" element={<SupportPage />} />

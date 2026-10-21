@@ -1,6 +1,15 @@
 import { ApiError } from './apiError';
 import { createDemoApi } from './demoApi';
-import type { ListInvite, Session, SharedList, SyncRequest, SyncResponse, User } from './types';
+import type { ListInvite, Session, SharedList, SyncRequest, SyncResponse, Task, User } from './types';
+
+/** A person using the local app on this device. */
+export interface LocalProfile {
+  id: string;
+  name: string;
+  createdAt: string;
+  /** Open tasks. */
+  open: number;
+}
 
 export { ApiError };
 
@@ -97,8 +106,14 @@ const realApi = {
   demoStart: undefined as undefined | (() => Promise<Session>),
   /** Local app only: creates the on-device profile (no account, no password). */
   localStart: undefined as undefined | ((name: string) => Promise<Session>),
-  /** Local app only: erases the profile and all tasks on this device. */
+  /** Local app only: erases this person's profile and tasks from the device. */
   localErase: undefined as undefined | ((token: string) => Promise<void>),
+  /** Local app only: everyone using DoNext on this device. */
+  localProfiles: undefined as undefined | (() => Promise<{ profiles: LocalProfile[] }>),
+  /** Local app only: switch to another person on this device. */
+  localSwitch: undefined as undefined | ((userId: string) => Promise<Session>),
+  /** Local app only: every person's tasks (for reminders). */
+  localAllTasks: undefined as undefined | (() => Promise<{ tasks: (Task & { ownerName: string })[] }>),
 };
 
 export type Api = typeof realApi;

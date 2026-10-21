@@ -57,8 +57,9 @@ function DemoLegal({ kind }: { kind: 'privacy' | 'terms' }) {
               private storage (or, for the live demo, in your browser's storage).
             </li>
             <li>Nothing is uploaded to us or to any server we run.</li>
+            <li>If several people use DoNext on one device, each has their own tasks, but anyone using that device can open any person’s tasks. There’s no password.</li>
             <li>
-              To delete everything, use <strong>Account → Erase all data</strong>, or uninstall the app (in the demo: clear this site's
+              To delete your data, use <strong>Account → Erase my data</strong>; to delete everyone’s on the device, uninstall the app (in the demo: clear this site's
               data in your browser).
             </li>
           </ul>

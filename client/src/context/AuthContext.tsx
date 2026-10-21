@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api, ApiError } from '../lib/api';
+import { api, ApiError, IS_LOCAL } from '../lib/api';
 import { LocalStore } from '../lib/db';
 import { KEYS, storage } from '../lib/storage';
 import type { Session, User } from '../lib/types';
@@ -28,8 +28,10 @@ interface AuthValue {
   startDemo: () => Promise<void>;
   /** Local app only: creates the on-device profile. */
   startLocal: (name: string) => Promise<void>;
-  /** Local app only: erases everything on this device and returns to the welcome screen. */
+  /** Local app only: erases this person's profile and tasks from the device. */
   eraseLocal: () => Promise<void>;
+  /** Local app only: switch to another person on this device. */
+  switchProfile: (userId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -66,7 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSessionExpired(false);
     setSession(s);
     // A different account logged in over an expired session: remove the old account's offline copy.
-    if (previous && previous.user.id !== s.user.id) void LocalStore.destroy(previous.user.id).catch(() => undefined);
+    // (Not in the local app, where switching people keeps everyone's tasks on the device.)
+    if (!IS_LOCAL && previous && previous.user.id !== s.user.id) void LocalStore.destroy(previous.user.id).catch(() => undefined);
   }, []);
 
   const markExpired = useCallback(() => setSessionExpired(true), []);
@@ -104,6 +107,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       startLocal: async (name) => {
         if (!api.localStart) throw new Error('Only available in the app.');
         start(await api.localStart(name));
+      },
+      switchProfile: async (userId) => {
+        if (!api.localSwitch) return;
+        if (session?.user.id === userId) return;
+        start(await api.localSwitch(userId));
       },
       eraseLocal: async () => {
         if (!session || !api.localErase) return;

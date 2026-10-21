@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { Alert } from '../components/Alert';
 import { AppLogo, AuthorLine } from '../components/Brand';
+import { markProfileChosen, ProfilePicker, useProfiles } from '../components/ProfilePicker';
 import { CheckIcon, CloudIcon, MicIcon, ShieldIcon } from '../components/Icons';
 import { Spinner } from '../components/Spinner';
 import { useAuth } from '../context/AuthContext';
@@ -33,6 +34,7 @@ function LocalWelcome() {
     setError(null);
     try {
       await startLocal(name);
+      markProfileChosen();
       navigate('/', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not get started. Please try again.');
@@ -93,8 +95,14 @@ function LocalWelcome() {
 
 /** Public home page for visitors who are not signed in. */
 export default function LandingPage() {
-  if (IS_LOCAL) return <LocalWelcome />;
+  if (IS_LOCAL) return <LocalStart />;
   return <WebLanding />;
+}
+
+function LocalStart() {
+  const profiles = useProfiles();
+  if (profiles === null) return null;
+  return profiles.length ? <ProfilePicker profiles={profiles} /> : <LocalWelcome />;
 }
 
 function WebLanding() {

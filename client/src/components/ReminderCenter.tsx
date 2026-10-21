@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTasks } from '../context/TasksContext';
+import { api, IS_LOCAL } from '../lib/api';
 import { formatDueDate, formatTime } from '../lib/filters';
 import {
   dueReminders,
@@ -24,6 +25,21 @@ import { storage } from '../lib/storage';
 import { readAloudEnabled } from '../lib/voicePrefs';
 
 const NOTIFY_ASKED = 'dt.notifyAsked';
+
+/**
+ * Local app: phone reminders ring for everyone on this device, not just the person who has the
+ * app open. With several people, each reminder starts with the person's name ("Sara: Dentist").
+ */
+async function everyonesTasks(mine: Task[]): Promise<Task[]> {
+  if (!IS_LOCAL || !api.localAllTasks) return mine;
+  try {
+    const { tasks } = await api.localAllTasks();
+    const people = new Set(tasks.map((t) => t.createdBy));
+    return tasks.map(({ ownerName, ...t }) => (people.size > 1 && ownerName ? { ...t, title: `${ownerName}: ${t.title}` } : t));
+  } catch {
+    return mine;
+  }
+}
 import type { Task } from '../lib/types';
 import { BellIcon, CloseIcon } from './Icons';
 
@@ -134,7 +150,7 @@ export function ReminderCenter() {
           storage.set(NOTIFY_ASKED, true);
           if ((await notificationPermission()) === 'prompt') await requestNotificationPermission();
         }
-        await syncNativeReminders(tasks, settings);
+        await syncNativeReminders(await everyonesTasks(tasks), settings);
       })();
     }, 800);
     return () => clearTimeout(id);

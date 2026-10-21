@@ -432,6 +432,35 @@ export function createDemoApi(opts: { storageKey?: string } = {}): Api {
         return session(user);
       }),
 
+    /** Everyone using DoNext on this device. */
+    localProfiles: () =>
+      tx((db) => ({
+        profiles: db.users
+          .map((u) => ({
+            id: u.id,
+            name: u.name,
+            createdAt: u.createdAt,
+            open: db.tasks.filter((t) => t.createdBy === u.id && !t.deletedAt && !t.completed).length,
+          }))
+          .sort((a, b) => a.createdAt.localeCompare(b.createdAt)),
+      })),
+
+    /** Switch to another person's tasks (no password: it's one shared device). */
+    localSwitch: (userId: string) =>
+      tx((db) => {
+        const user = db.users.find((u) => u.id === userId);
+        if (!user) throw new ApiError(404, 'That person is no longer on this device.');
+        return session(user);
+      }),
+
+    /** Every person's open tasks, so reminders ring for everyone on the device. */
+    localAllTasks: () =>
+      tx((db) => ({
+        tasks: db.tasks
+          .filter((t) => !t.deletedAt)
+          .map((t) => ({ ...t, ownerName: db.users.find((u) => u.id === t.createdBy)?.name ?? '' })),
+      })),
+
     localErase: (token: string) =>
       tx((db) => {
         const user = authed(db, token);

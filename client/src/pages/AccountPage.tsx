@@ -325,25 +325,25 @@ function EraseLocalSection() {
   return (
     <section className="card space-y-3 border-red-300 p-5 dark:border-red-900" aria-labelledby="erase-h">
       <h2 id="erase-h" className="text-lg font-semibold text-red-700 dark:text-red-400">
-        Erase all data
+        Erase my data
       </h2>
       <p className="text-sm text-slate-600 dark:text-slate-400">
         Your tasks are stored only on this device: DoNext can’t back them up or recover them, and you’re responsible for keeping your own copy of anything important. Erasing removes your name, tasks and reminders from this device. This can’t be undone.
         Uninstalling the app also erases everything.
       </p>
       <button type="button" className="btn-danger w-full sm:w-auto" onClick={() => setConfirming(true)}>
-        Erase all data
+        Erase my data
       </button>
       {confirming && (
-        <Modal title="Erase all data?" onClose={() => setConfirming(false)}>
-          <p className="mb-5 text-slate-700 dark:text-slate-300">All your tasks and settings on this device will be permanently deleted.</p>
+        <Modal title="Erase your data?" onClose={() => setConfirming(false)}>
+          <p className="mb-5 text-slate-700 dark:text-slate-300">Your name and all your tasks will be permanently deleted from this device. Other people on this phone keep theirs.</p>
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" className="btn-secondary" onClick={() => setConfirming(false)}>
               Cancel
             </button>
             <button type="button" className="btn-danger" onClick={() => void erase()} disabled={busy}>
               {busy && <Spinner className="h-4 w-4" />}
-              Erase everything
+              Erase my data
             </button>
           </div>
         </Modal>
