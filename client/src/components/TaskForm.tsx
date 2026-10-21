@@ -7,7 +7,7 @@ import { SmartSuggestions, suggestionFor } from './SmartSuggestions';
 import { canSpeak, speak } from '../lib/sound';
 import { readAloudEnabled } from '../lib/voicePrefs';
 import { ReadAloudToggle } from './ReadAloudToggle';
-import { confirmationText, parseVoiceCommand, type VoiceCommand } from '../lib/voiceCommand';
+import { parseVoiceCommand, spokenConfirmation, type VoiceCommand } from '../lib/voiceCommand';
 import { Spinner } from './Spinner';
 import { SubtaskEditor } from './SubtaskEditor';
 import { VoiceInput } from './VoiceInput';
@@ -142,7 +142,7 @@ export function TaskForm({
     try {
       await onSubmit(f);
       // Say what was added ("Added Job, tomorrow at 9:00 AM, high priority…").
-      if (voice && readAloudEnabled() && canSpeak()) speak(confirmationText(f));
+      if (voice && readAloudEnabled() && canSpeak()) speak(spokenConfirmation(f));
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Could not save the task. Please try again.');
     } finally {

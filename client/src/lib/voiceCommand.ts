@@ -125,3 +125,8 @@ export function confirmationText(f: Pick<TaskFields, 'title' | 'dueDate' | 'dueT
   if (f.subtasks.length) parts.push(`${f.subtasks.length} sub-item${f.subtasks.length === 1 ? '' : 's'}`);
   return `${parts.join(', ')}.`;
 }
+
+/** The spoken version: just the task, without "Added" ("Job, tomorrow at 9:00 AM, high priority…"). */
+export function spokenConfirmation(f: Parameters<typeof confirmationText>[0], now = new Date()): string {
+  return confirmationText(f, now).replace(/^Added /, '').replace(/, Tomorrow/, ', tomorrow').replace(/, Today/, ', today');
+}
